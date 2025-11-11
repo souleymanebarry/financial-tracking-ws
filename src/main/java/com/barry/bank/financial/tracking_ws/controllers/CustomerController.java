@@ -35,6 +35,25 @@ public interface CustomerController {
     ResponseEntity<CustomerDTO> partiallyUpdateCustomer(@PathVariable UUID customerId,
                                         @RequestBody CustomerDTO customerDTO);
 
+    /**
+     *  Deletes a customer after sending their data to the archiving microservice,
+     * including all associated accounts and operations.
+     *
+     * <p>This method performs the following steps:</p>
+     *  <ol>
+     *    <li>Retrieves the complete customer data with accounts and operations.</li>
+     *    <li>Sends the customer data to the archiving microservice.</li>
+     *    <li>Deletes the customer and all related accounts and operations.</li>
+     *  </ol>
+     *
+     * @param customerId the unique identifier of the customer to archive and delete
+     * @return a {@link ResponseEntity} indicating the result of the operation:
+     *         <ul>
+     *           <li>204 No Content if the customer was successfully archived and deleted</li>
+     *           <li>404 Not Found if the customer does not exist</li>
+     *         </ul>
+     * @throws RuntimeException if an error occurs during the archiving process
+     */
     @DeleteMapping("/{customerId}")
     ResponseEntity<Void> deleteCustomer(@PathVariable UUID customerId);
 

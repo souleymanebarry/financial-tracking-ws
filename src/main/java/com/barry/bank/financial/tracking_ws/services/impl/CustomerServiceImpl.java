@@ -1,17 +1,19 @@
 package com.barry.bank.financial.tracking_ws.services.impl;
 
+import com.barry.bank.financial.tracking_ws.entities.BankAccount;
 import com.barry.bank.financial.tracking_ws.entities.Customer;
+import com.barry.bank.financial.tracking_ws.entities.Operation;
+import com.barry.bank.financial.tracking_ws.repositories.BankAccountRepository;
 import com.barry.bank.financial.tracking_ws.repositories.CustomerRepository;
+import com.barry.bank.financial.tracking_ws.repositories.OperationRepository;
 import com.barry.bank.financial.tracking_ws.services.CustomerService;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
-
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -23,6 +25,8 @@ import java.util.UUID;
 public class CustomerServiceImpl implements CustomerService {
 
     private final CustomerRepository customerRepository;
+    private final BankAccountRepository accountRepository;
+    private final OperationRepository operationRepository;
 
     @Override
     public Customer createCustomer(Customer customer) {
@@ -100,9 +104,35 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
+    public Customer getFullCustomerData(UUID customerId) {
+        Customer customer = getCustomerById(customerId);
+        List<BankAccount> accounts = accountRepository.findByCustomer_CustomerId(customerId);
+        accounts.forEach(account -> {
+            List<Operation> operations = operationRepository.findByAccount_AccountId(account.getAccountId());
+            account.setOperations(operations);
+        });
+
+        customer.setBankAccounts(accounts);
+        return customer;
+    }
+
+    @Override
+    @Transactional
     public void deleteCustomer(UUID customerId) {
         Customer customer = getCustomerById(customerId);
+
+        List<BankAccount> accounts = getBankAccounts(customerId);
+
+        // supprimer les opérations de chaque compte
+        accounts.forEach(account -> {
+            operationRepository.deleteAllByAccount_AccountId(account.getAccountId());
+            accountRepository.delete(account);
+        });
         customerRepository.delete(customer);
-        log.info("Customer deleted successfully: customerId: {}",customerId);
+        log.info("Customer and all related data deleted successfully: customerId={}", customerId);
+    }
+
+    private List<BankAccount> getBankAccounts(UUID customerId) {
+        return accountRepository.findByCustomer_CustomerId(customerId);
     }
 }

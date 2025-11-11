@@ -94,6 +94,10 @@ public interface BankAccountService {
      */
     BankAccount getAccountById(UUID accountId);
 
-
+    /**
+     *Retrieve all bank accounts without pagination
+     *
+     * @return a list of {@link BankAccount} objects
+     */
     List<BankAccount> getAccountsWithoutPaginations();
 }
