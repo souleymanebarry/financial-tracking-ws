@@ -12,7 +12,9 @@ public interface OperationRepository extends JpaRepository<Operation, UUID> {
 
     List<Operation> findByAccount_AccountId(UUID accountId, Sort sort);
 
+    List<Operation> findByAccount_AccountId(UUID accountId);
+
     Page<Operation> findByAccount_AccountId(UUID accountId, Pageable pageable);
 
-
+    void deleteAllByAccount_AccountId(UUID accountId);
 }

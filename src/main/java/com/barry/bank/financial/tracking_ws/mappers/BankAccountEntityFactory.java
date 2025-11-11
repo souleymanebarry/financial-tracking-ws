@@ -28,5 +28,4 @@ public class BankAccountEntityFactory {
             default -> throw new IllegalArgumentException("Unknown account type: " + type);
         };
     }
-
 }

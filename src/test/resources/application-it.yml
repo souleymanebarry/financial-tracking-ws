@@ -18,3 +18,7 @@ spring:
   jackson:
     serialization:
       INDENT_OUTPUT: true
+
+archive:
+  service:
+    url: http://localhost:${wiremock.server.port}
