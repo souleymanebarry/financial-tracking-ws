@@ -1,10 +1,14 @@
 package com.barry.bank.financial.tracking_ws.services.impl;
 
-import static com.barry.bank.financial.tracking_ws.enums.Gender.MALE;
+import com.barry.bank.financial.tracking_ws.entities.BankAccount;
+import com.barry.bank.financial.tracking_ws.entities.CurrentAccount;
 import com.barry.bank.financial.tracking_ws.entities.Customer;
+import com.barry.bank.financial.tracking_ws.entities.Operation;
+import com.barry.bank.financial.tracking_ws.entities.SavingAccount;
+import com.barry.bank.financial.tracking_ws.repositories.BankAccountRepository;
 import com.barry.bank.financial.tracking_ws.repositories.CustomerRepository;
+import com.barry.bank.financial.tracking_ws.repositories.OperationRepository;
 import org.junit.jupiter.api.BeforeEach;
-
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -12,25 +16,28 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
-
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Stream;
 
+import static com.barry.bank.financial.tracking_ws.enums.AccountStatus.CREATED;
+import static com.barry.bank.financial.tracking_ws.enums.Gender.MALE;
+import static com.barry.bank.financial.tracking_ws.enums.OperationType.CREDIT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertAll;
-
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -43,6 +50,12 @@ class CustomerServiceImplTest {
     @Mock
     private CustomerRepository customerRepository;
 
+    @Mock
+    private BankAccountRepository accountRepository;
+
+    @Mock
+    private OperationRepository operationRepository;
+
     @InjectMocks
     private CustomerServiceImpl customerService;
 
@@ -53,8 +66,8 @@ class CustomerServiceImplTest {
     void setUp() {
         customer = Customer.builder()
                 .customerId(UUID.randomUUID())
-                .firstName("DURANT")
-                .lastName("Alexandre")
+                .firstName("Alexandre")
+                .lastName("DURANT")
                 .email("alexandre.durant@gmail.com")
                 .gender(MALE)
                 .build();
@@ -326,30 +339,160 @@ class CustomerServiceImplTest {
     }
 
     @Test
-    void shouldDeleteCustomerWhenCustomerIdIsValidOnDeleteCustomer() {
+    void shouldDeleteCustomerWithAllRelatedDatWhenCustomerIdIsValid() {
         // Arrange
         UUID customerId = customer.getCustomerId();
+        UUID currentAccountId = UUID.randomUUID();
+        UUID savingAccountId = UUID.randomUUID();
+        UUID operationId1  = UUID.randomUUID();
+        UUID operationId2  = UUID.randomUUID();
 
-        ArgumentCaptor<Customer> customerCaptor = ArgumentCaptor.forClass(Customer.class);
+        CurrentAccount account1 = CurrentAccount.builder()
+                .accountId(currentAccountId)
+                .rib("FR76 8778 1254 3167 7552 374")
+                .balance(BigDecimal.valueOf(20_000))
+                .createdAt(LocalDateTime.now())
+                .status(CREATED)
+                .overDraft(BigDecimal.valueOf(200))
+                .customer(customer)
+                .build();
+
+        SavingAccount account2 = SavingAccount.builder()
+                .accountId(savingAccountId)
+                .rib("FR76 2222 1254 3167 7552 374")
+                .balance(BigDecimal.valueOf(1_000))
+                .createdAt(LocalDateTime.now())
+                .status(CREATED)
+                .interestRate(BigDecimal.valueOf(1.4))
+                .customer(customer)
+                .build();
+
+        List<BankAccount> accounts = Arrays.asList(account1, account2);
+
+        Operation.builder()
+                .operationId(operationId1)
+                .operationDate(LocalDateTime.now())
+                .operationType(CREDIT)
+                .operationAmount(BigDecimal.valueOf(10_000))
+                .account(account1)
+                .build();
+
+        Operation.builder()
+                .operationId(operationId2)
+                .operationDate(LocalDateTime.now())
+                .operationType(CREDIT)
+                .operationAmount(BigDecimal.valueOf(20_000))
+                .account(account1)
+                .build();
 
         when(customerRepository.findById(customerId)).thenReturn(Optional.of(customer));
+        when(accountRepository.findByCustomer_CustomerId(customerId)).thenReturn(accounts);
+        doNothing().when(operationRepository).deleteAllByAccount_AccountId(currentAccountId);
+        doNothing().when(operationRepository).deleteAllByAccount_AccountId(savingAccountId);
+        doNothing().when(accountRepository).delete(account1);
+        doNothing().when(accountRepository).delete(account2);
+        doNothing().when(customerRepository).delete(customer);
 
-        // Act + Assert
-       customerService.deleteCustomer(customerId);
-
-        // verify
-        verify(customerRepository, times(1)).findById(customerId);
-        verify(customerRepository, times(1)).delete(customerCaptor.capture());
-        
-        // Extract captured arguments
-        Customer deletedCustomer = customerCaptor.getValue();
+        // Act
+        customerService.deleteCustomer(customerId);
 
         // Assert
-        assertAll(
-                () -> assertThat(deletedCustomer.getCustomerId()).isEqualTo(customerId),
-                () -> assertThat(deletedCustomer.getEmail()).isEqualTo("alexandre.durant@gmail.com")
-        );
+        for (BankAccount account : accounts) {
+            verify(operationRepository, times(1)).deleteAllByAccount_AccountId(account.getAccountId());
+            verify(accountRepository, times(1)).delete(account);
+        }
 
+       verify(customerRepository, times(1)).findById(customerId);
+       verify(customerRepository, times(1)).delete(customer);
     }
 
+    @Test
+    void shouldGetFullCustomerDataWhenCustomerIdIsValid() {
+        // Arrange
+        UUID customerId = customer.getCustomerId();
+        UUID currentAccountId = UUID.randomUUID();
+        UUID savingAccountId = UUID.randomUUID();
+        UUID operationId1 = UUID.randomUUID();
+        UUID operationId2 = UUID.randomUUID();
+
+        CurrentAccount account1 = CurrentAccount.builder()
+                .accountId(currentAccountId)
+                .rib("FR76 8778 1254 3167 7552 374")
+                .balance(BigDecimal.valueOf(20_000))
+                .createdAt(LocalDateTime.now())
+                .status(CREATED)
+                .overDraft(BigDecimal.valueOf(200))
+                .customer(customer)
+                .build();
+
+        SavingAccount account2 = SavingAccount.builder()
+                .accountId(savingAccountId)
+                .rib("FR76 2222 1254 3167 7552 374")
+                .balance(BigDecimal.valueOf(1_000))
+                .createdAt(LocalDateTime.now())
+                .status(CREATED)
+                .interestRate(BigDecimal.valueOf(1.4))
+                .customer(customer)
+                .build();
+
+        List<BankAccount> accounts = Arrays.asList(account1, account2);
+
+        Operation operation1 = Operation.builder()
+                .operationId(operationId1)
+                .operationDate(LocalDateTime.now())
+                .operationType(CREDIT)
+                .operationAmount(BigDecimal.valueOf(10_000))
+                .account(account1)
+                .build();
+
+        Operation operation2 = Operation.builder()
+                .operationId(operationId2)
+                .operationDate(LocalDateTime.now())
+                .operationType(CREDIT)
+                .operationAmount(BigDecimal.valueOf(20_000))
+                .account(account2)
+                .build();
+
+        when(customerRepository.findById(customerId)).thenReturn(Optional.of(customer));
+        when(accountRepository.findByCustomer_CustomerId(customerId)).thenReturn(accounts);
+        when(operationRepository.findByAccount_AccountId(currentAccountId)).thenReturn(List.of(operation1));
+        when(operationRepository.findByAccount_AccountId(savingAccountId)).thenReturn(List.of(operation2));
+
+        // Act
+        Customer result = customerService.getFullCustomerData(customerId);
+
+        // Assert
+        assertThat(result.getCustomerId()).isEqualTo(customerId);
+
+        BankAccount acc1 = result.getBankAccounts().stream()
+                .filter(a -> a.getAccountId().equals(currentAccountId))
+                .findFirst()
+                .orElseThrow();
+        BankAccount acc2 = result.getBankAccounts().stream()
+                .filter(a -> a.getAccountId().equals(savingAccountId))
+                .findFirst()
+                .orElseThrow();
+
+        assertThat(acc1.getOperations())
+                .hasSize(1)
+                .first()
+                .satisfies(op -> {
+                    assertThat(op.getOperationId()).isEqualTo(operationId1);
+                    assertThat(op.getOperationAmount()).isEqualByComparingTo(BigDecimal.valueOf(10_000));
+                });
+
+        assertThat(acc2.getOperations())
+                .hasSize(1)
+                .first()
+                .satisfies(op -> {
+                    assertThat(op.getOperationId()).isEqualTo(operationId2);
+                    assertThat(op.getOperationAmount()).isEqualByComparingTo(BigDecimal.valueOf(20_000));
+                });
+
+        // Verify
+        verify(customerRepository, times(1)).findById(customerId);
+        verify(accountRepository, times(1)).findByCustomer_CustomerId(customerId);
+        verify(operationRepository, times(1)).findByAccount_AccountId(currentAccountId);
+        verify(operationRepository, times(1)).findByAccount_AccountId(savingAccountId);
+    }
 }

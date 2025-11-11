@@ -198,3 +198,60 @@ Scalabilité : le service d’archivage peut traiter les messages à son rythme.
 ✅ Bonne pratique:
  laisser le service lancer l’exception et gérer via @ControllerAdvice. Cela centralise le traitement des erreurs.
 #tradeoffs
+
+[ financial-tracking-ws ]
+     |
+     | DELETE /api/v1/customers/{id}
+     v
+ ┌───────────────────────────────────────────┐
+ │ CustomerServiceImpl.deleteCustomer()      │
+ │    ├─ Récupère Customer + comptes + ops   │
+ │    ├─ Construit CustomerArchiveDTO        │
+ │    ├─ Appelle ArchiveClient.archive(...)  │──► [ financial-archive-service ]
+ │    └─ Supprime le Customer                │
+ └───────────────────────────────────────────┘
+| Composant                      | Rôle principal                                                                             |
+| ------------------------------ | ------------------------------------------------------------------------------------------ |
+| **Controller**                 | Orchestration inter-systèmes : récupère, archive, supprime                                 |
+| **CustomerServiceImpl**        | Logique métier interne : lecture, modification, suppression, composition du client complet |
+| **CustomerArchiveServiceImpl** | Envoi vers le microservice d’archivage                                                     |
+| **ArchiveCustomer**            | Couche technique d’appel HTTP via `RestClient`                                             |
+#mind map
+#Taille des payload(s) pour kafka limiter à 1Mo
+#Temps de traitement cote consumer
+#Avoir de Topic par domaine metier
+| Étape | Action                                                     | Microservice                 |
+| ----- | ---------------------------------------------------------- | ---------------------------- |
+| 1     | Récupère `Customer` complet avec ses comptes et opérations | `financial-service`          |
+| 2     | Convertit en `CustomerArchiveDTO`                          | `CustomerArchiveServiceImpl` |
+| 3     | Envoie via `ArchiveCustomer` (`WebClient`)                 | `financial-service`          |
+| 4     | Reçoit la requête REST, mappe en entités et sauvegarde     | `financial-archive-service`  |
+| 5     | Supprime ensuite le client principal                       | `financial-service`          |
+
+
+3️⃣ Bonnes pratiques
+Mesurer régulièrement la taille des payloads dans les logs ou via monitoring.
+Fixer une taille maximale réaliste en fonction de ton use case
+ (souvent quelques Mo max pour un microservice interne).
+Combiner limitation côté serveur et côté client.
+En cas de dépassement, retourner HTTP 413 (Payload Too Large) pour signaler l’erreur proprement.
+
+4️⃣ Limitation / contrôle des appels
+Rate limiting : limiter le nombre de requêtes par seconde pour éviter les surcharges.
+Circuit breaker (Resilience4j, Spring Cloud Circuit Breaker) : 
+protéger le service d’archivage si le service principal
+envoie trop de requêtes ou si un problème réseau survient.
+
+5️⃣ Journalisation sécurisée
+Ne pas logguer de données sensibles (emails, tokens, soldes) en clair.
+Logguer uniquement les identifiants et métadonnées utiles pour le debug.
+
+6️⃣ Option avancée : service mesh
+Avec des infrastructures comme Istio ou Linkerd, tu peux sécuriser tous les échanges internes
+ entre services avec mTLS automatique, et appliquer politiques de sécurité centralisées sans toucher le code.
+
+Exemple simple pour ton cas
+Le service principal génère un JWT signé avec une clé partagée.
+Le service d’archivage vérifie le JWT avant de traiter le CustomerArchiveDTO.
+Les appels se font via HTTPS.
+Les DTO sont validés avec @Valid.

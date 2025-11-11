@@ -11,10 +11,7 @@ import java.util.List;
 public interface OperationMapper {
 
     OperationDTO operationToOperationDto(Operation operation);
-
     @Mapping(target = "account", ignore = true)
     Operation operationDtoToOperation(OperationDTO operationDTO);
-
-
     List<OperationDTO> operationsToOperationDtos(List<Operation> operation);
 }

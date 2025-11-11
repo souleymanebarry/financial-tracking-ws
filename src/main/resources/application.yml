@@ -21,3 +21,6 @@ logging:
   level:
     org.springframework.boot.autoconfigure.jdbc: DEBUG
 
+archive:
+  service:
+    url: http://localhost:8085

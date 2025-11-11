@@ -18,6 +18,7 @@ import org.springframework.test.context.ActiveProfiles;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 import static com.barry.bank.financial.tracking_ws.enums.Gender.FEMALE;
 import static com.barry.bank.financial.tracking_ws.enums.OperationType.CREDIT;
@@ -113,6 +114,24 @@ class OperationRepositoryTest {
                 () -> assertThat(page.getTotalElements()).isEqualTo(2),
                 () -> assertThat(page.getContent().get(0).getAccount().getAccountId()).isEqualTo(account.getAccountId())
         );
+    }
+
+    @Test
+    void shouldDeleteCustomerAndAllRelatedData() {
+        // Arrange
+        UUID accountId = account.getAccountId();
+
+        // Vérifier qu’il y a bien des opérations avant suppression
+        List<Operation> operationsBefore = operationRepository.findByAccount_AccountId(accountId);
+        assertThat(operationsBefore).hasSize(2);
+
+        // Act
+        operationRepository.deleteAllByAccount_AccountId(accountId);
+
+        // Assert
+        List<Operation> operationsAfter = operationRepository.findByAccount_AccountId(accountId);
+        assertThat(operationsAfter).isEmpty();
+
     }
 
 }
