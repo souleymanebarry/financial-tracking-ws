@@ -1,5 +1,6 @@
 package com.barry.bank.financial.tracking_ws.controllers.impl;
 
+import com.github.tomakehurst.wiremock.client.WireMock;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -7,6 +8,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.contract.wiremock.AutoConfigureWireMock;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
@@ -162,7 +165,7 @@ class CustomerControllerIT {
     @SneakyThrows
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
     void shouldArchiveAndDeleteCustomerSuccessfully() {
-        // Arrange – payload attendu du microservice d’archivage
+        // Arrange – expected payload of the archiving microservice
         String expectedPayload = """
                     {
                       "customerId": "33333333-cccc-4ccc-cccc-333333333333",
@@ -203,13 +206,13 @@ class CustomerControllerIT {
                     }
                     """;
 
-        // 1 Stub du microservice d’archivage pour intercepter le POST
-        stubFor(com.github.tomakehurst.wiremock.client.WireMock.post(urlEqualTo("/api/v1/archives/customers"))
-                .withHeader("Content-Type", equalTo("application/json"))
+        // 1 Archiving microservice stub to intercept the POST
+        stubFor(WireMock.post(urlEqualTo("/api/v1/archives/customers"))
+                .withHeader(HttpHeaders.CONTENT_TYPE, equalTo(MediaType.APPLICATION_JSON_VALUE))
                 .withRequestBody(equalToJson(expectedPayload, true, true)) // ignore order, allow nulls
                 .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+                        .withStatus(HttpStatus.CREATED.value())
+                        .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                         .withBody("""
                         {
                           "status": "ARCHIVED",
@@ -217,25 +220,25 @@ class CustomerControllerIT {
                         }
                     """)));
 
-        // 2 Act – suppression du client (le service enverra le POST d’archivage)
+        // 2 Act – removal of the customer
         mockMvc.perform(delete("/api/v1/customers/{id}", "33333333-cccc-4ccc-cccc-333333333333"))
                 .andExpect(status().isNoContent());
 
-        // 3 Assert – vérifie que la requête d’archivage a bien été envoyée
+        // 3 Assert – check if the archive request has indeed been sent
         verify(postRequestedFor(urlEqualTo("/api/v1/archives/customers"))
                 .withRequestBody(equalToJson(expectedPayload, true, true)));
 
-        // 4 Vérifie que le client a bien été supprimé
+        // 4 check if the customer has indeed been deleted
         Integer countCustomer = jdbcTemplate.queryForObject(
                 "SELECT COUNT(*) FROM customer WHERE customer_id = '33333333-cccc-4ccc-cccc-333333333333'", Integer.class);
         assertThat(countCustomer).isZero();
 
-        // 5 Vérifie que ses comptes ont bien été supprimés
+        // 5 check that their accounts has indeed been deleted
         Integer countAccounts = jdbcTemplate.queryForObject(
                 "SELECT COUNT(*) FROM account WHERE customer_id = '33333333-cccc-4ccc-cccc-333333333333'", Integer.class);
         assertThat(countAccounts).isZero();
 
-        // 6 Vérifie que ses opérations liées ont bien été supprimées
+        // 6 check that their related operations has indeed been deleted
         Integer countOperations = jdbcTemplate.queryForObject(
                 "SELECT COUNT(*) FROM operation o " +
                         "JOIN account a ON o.account_id = a.account_id " +
