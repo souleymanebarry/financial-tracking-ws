@@ -255,3 +255,13 @@ Le service principal génère un JWT signé avec une clé partagée.
 Le service d’archivage vérifie le JWT avant de traiter le CustomerArchiveDTO.
 Les appels se font via HTTPS.
 Les DTO sont validés avec @Valid.
+____________________________________________
+🥇 La seule méthode 100 % fiable : envoyer un email de confirmation.
+
+Si tu veux, je peux te fournir :
+
+🚀 fournir une nouvelle feature complet d’implémentation dans (financial-tracking-ws)
+
+📩 un service d’envoi du mail de vérification
+
+🔗 un système de lien / token / expiration

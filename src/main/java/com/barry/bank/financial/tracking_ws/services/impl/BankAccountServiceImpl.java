@@ -215,10 +215,7 @@ public class BankAccountServiceImpl implements BankAccountService {
     }
 
     private void recordOperation(BigDecimal amount, BankAccount account, OperationType operationType, String description) {
-        String defaultDescription = switch (operationType) {
-            case DEBIT -> "Debit operation";
-            case CREDIT -> "Credit operation";
-        };
+        String defaultDescription = getDefaultDescription(operationType);
         Operation operation = Operation.builder()
                 .account(account)
                 .operationDate(LocalDateTime.now())
@@ -227,6 +224,13 @@ public class BankAccountServiceImpl implements BankAccountService {
                 .operationType(operationType)
                 .description(StringUtils.isNotBlank(description) ? description : defaultDescription).build();
         operationRepository.save(operation);
+    }
+
+    private String getDefaultDescription(OperationType operationType) {
+        return switch (operationType) {
+            case DEBIT -> "Debit operation";
+            case CREDIT -> "Credit operation";
+        };
     }
 
     private void updateAccountBalance(BankAccount account, BigDecimal newBalance) {
