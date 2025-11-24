@@ -1,7 +1,7 @@
 --liquibase formatted sql
 --changeset sbarry:001_insert_customer_data context:test
 
-INSERT INTO CUSTOMER (CUSTOMER_ID, FIRST_NAME, LAST_NAME, EMAIL, GENDER)
+INSERT INTO CUSTOMER (CUSTOMER_ID, EMAIL, FIRST_NAME, GENDER, LAST_NAME)
 VALUES
 ('7b76bb02-e285-447a-8f28-0733db58cde2', 'jacob.allen@mail.com', 'Jacob', 'MALE', 'Allen'),
 ('196a8eca-0e1e-4b05-a55e-58bbf8a609d2', 'luna.smith@mail.com', 'Luna', 'MALE', 'Smith'),
