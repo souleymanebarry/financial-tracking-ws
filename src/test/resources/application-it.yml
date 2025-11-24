@@ -5,6 +5,9 @@ spring:
     password: 1234
     driver-class-name: org.postgresql.Driver
 
+  liquibase:
+    enabled: false
+
   jpa:
     hibernate:
       ddl-auto: none
