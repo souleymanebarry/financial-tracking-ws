@@ -63,7 +63,11 @@
 			<version>${h2.version}</version>
 			<scope>test</scope>
 		</dependency>
-
+		<!-- Liquibase for DB changes -->
+		<dependency>
+			<groupId>org.liquibase</groupId>
+			<artifactId>liquibase-core</artifactId>
+		</dependency>
 		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
