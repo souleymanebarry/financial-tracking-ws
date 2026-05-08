@@ -24,8 +24,14 @@ spring:
 logging:
   level:
     org.springframework.boot.autoconfigure.jdbc: DEBUG
+    org.springframework.security: TRACE
 
-# Archive service
+# archive service
 archive:
   service:
     url: http://localhost:8085
+
+# secret
+security:
+  jwt:
+    secret: 9f8a7c6e5d4b3a2f1c0e9d8b7a6c5e4f

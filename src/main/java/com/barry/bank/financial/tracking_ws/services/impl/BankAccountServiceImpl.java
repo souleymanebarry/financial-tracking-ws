@@ -78,7 +78,6 @@ public class BankAccountServiceImpl implements BankAccountService {
     }
 
     @Override
-    @Transactional
     public void debitAccount(UUID accountId, BigDecimal amount, String description) {
         if (accountId == null || amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
             log.warn("Invalid debit attempt: accountId= {}, withdrawalAmount= {}", accountId, amount);
@@ -103,7 +102,6 @@ public class BankAccountServiceImpl implements BankAccountService {
     }
 
     @Override
-    @Transactional
     public void creditAccount(UUID accountId, BigDecimal amount, String description) {
         if (accountId == null || amount == null) {
             log.warn("Attempt to use non-existent accountId or amount: accountId: {}, creditAmount: {}"
