@@ -253,6 +253,7 @@ Avec des infrastructures comme Istio ou Linkerd, tu peux sécuriser tous les éc
 Exemple simple pour ton cas
 Le service principal génère un JWT signé avec une clé partagée.
 Le service d’archivage vérifie le JWT avant de traiter le CustomerArchiveDTO.
+🟡 service authentication (machine-to-machine)
 Les appels se font via HTTPS.
 Les DTO sont validés avec @Valid.
 ____________________________________________
@@ -265,3 +266,6 @@ Si tu veux, je peux te fournir :
 📩 un service d’envoi du mail de vérification
 
 🔗 un système de lien / token / expiration
+
+financial-tracking ---> signe avec PRIVATE KEY
+financial-archive  ---> vérifie avec PUBLIC KEY

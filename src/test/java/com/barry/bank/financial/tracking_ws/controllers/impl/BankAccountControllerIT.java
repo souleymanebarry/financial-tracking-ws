@@ -144,7 +144,7 @@ class BankAccountControllerIT {
     @Test
     @SneakyThrows
     void shouldDebitAccountAndPersistOperation() {
-       String JsonBody = """
+       String jsonBody = """
                 {
                   "amount": 200,
                   "description": "Withdrawal at the counter"
@@ -152,7 +152,7 @@ class BankAccountControllerIT {
                 """;
         mockMvc.perform(post("/api/v1/accounts/{accountId}/debit","cccc3333-0000-4000-b333-000000000003")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(JsonBody))
+                        .content(jsonBody))
                 .andExpect(status().isOk());
 
         // Vérifier en base
@@ -177,7 +177,7 @@ class BankAccountControllerIT {
     @Test
     @SneakyThrows
     void shouldCreditAccountAndPersistOperation() {
-        String JsonBody = """
+        String jsonBody = """
                 {
                   "amount": 1000,
                   "description": "Bonus credit"
@@ -185,7 +185,7 @@ class BankAccountControllerIT {
                 """;
         mockMvc.perform(post("/api/v1/accounts/{accountId}/credit","bbbb2222-0000-4000-b222-000000000002")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(JsonBody))
+                        .content(jsonBody))
                 .andExpect(status().isOk());
 
         // Vérifier en base
@@ -210,7 +210,7 @@ class BankAccountControllerIT {
     @Test
     @SneakyThrows
     void shouldTransferAmountBetweenAccountsAndPersistOperation() {
-        String JsonBody = """
+        String jsonBody = """
                 {
                   "sourceAccountId": "cccc3333-0000-4000-b333-000000000003",
                   "destinationAccountId": "bbbb2222-0000-4000-b222-000000000002",
@@ -219,7 +219,7 @@ class BankAccountControllerIT {
                 """;
         mockMvc.perform(post("/api/v1/accounts/transfer")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(JsonBody))
+                        .content(jsonBody))
                 .andExpect(status().isOk());
 
         // Vérifier en base
@@ -256,7 +256,7 @@ class BankAccountControllerIT {
     @SneakyThrows
     void shouldCreateCurrentAccountSuccessfully() {
         // 🧠 GIVEN
-        String JsonBody = """
+        String jsonBody = """
                 {
                   "customerDTO": {
                       "customerId": "33333333-cccc-4ccc-cccc-333332313445"
@@ -270,7 +270,7 @@ class BankAccountControllerIT {
                 """;
         MvcResult result = mockMvc.perform(post("/api/v1/accounts/{customerId}/current-account", "33333333-cccc-4ccc-cccc-333332313445")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(JsonBody))
+                        .content(jsonBody))
                 .andExpect(status().isCreated())
                 .andExpect(header().exists("Location"))
                 .andExpect(jsonPath("$.accountId").exists())
@@ -298,7 +298,7 @@ class BankAccountControllerIT {
     @SneakyThrows
     void shouldCreateSavingAccountSuccessfully() {
         // GIVEN
-        String JsonBody = """
+        String jsonBody = """
                 {
                   "customerDTO": {
                       "customerId": "33333333-cccc-4ccc-cccc-333332313445"
@@ -312,7 +312,7 @@ class BankAccountControllerIT {
                 """;
         MvcResult result = mockMvc.perform(post("/api/v1/accounts/{customerId}/saving-account", "33333333-cccc-4ccc-cccc-333332313445")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(JsonBody))
+                        .content(jsonBody))
                 .andExpect(status().isCreated())
                 .andExpect(header().exists("Location"))
                 .andExpect(jsonPath("$.accountId").exists())
