@@ -1,6 +1,6 @@
 package com.barry.bank.financial.tracking_ws.config;
 
-import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
+import org.springframework.security.oauth2.jose.jws.SignatureAlgorithm;
 import org.springframework.security.oauth2.jwt.JwsHeader;
 import org.springframework.security.oauth2.jwt.JwtClaimsSet;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
@@ -33,7 +33,7 @@ public class JwtService {
                 .expiresAt(now.plusSeconds(120))
                 .build();
 
-        JwsHeader headers = JwsHeader.with(MacAlgorithm.HS256).build();
+        JwsHeader headers = JwsHeader.with(SignatureAlgorithm.RS256).build();
 
         return jwtEncoder.encode(JwtEncoderParameters.from(headers, claims)).getTokenValue();
     }
