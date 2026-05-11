@@ -85,6 +85,13 @@ Data is stored in **PostgreSQL** using **Spring Data JPA** and exposed via **Spr
 5. Check `customer_id_seq` to avoid duplicate primary keys
 
 ---
+OPENSSL CMD
+# Keypair
+> openssl genrsa -out keypair.pem 2048
+# Public Key
+> openssl rsa -in keypair.pem -pubout -out public.pem
+# Private Key
+> openssl pkcs8 -topk8 -inform PEM -nocrypt -in keypair.pem -out private.pem
 
 ## 🧱 Prérequis Techniques / Technical Requirements
 
