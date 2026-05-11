@@ -2,36 +2,66 @@ spring:
   application:
     name: financial-tracking-ws
 
-# DataSource (PostgreSQL)
+  # =========================
+  # Vault
+  # =========================
+
+  config:
+    import: vault://
+
+  cloud:
+    vault:
+      uri: http://127.0.0.1:8200
+      token: ${VAULT_TOKEN}
+
+      kv:
+        enabled: true
+        backend: secret
+        default-context: financial-tracking-ws/rsa
+
+  # =========================
+  # DataSource (PostgreSQL)
+  # =========================
   datasource:
     url: jdbc:postgresql://localhost:5432/financial-tracking-ws-db
     username: postgres
     password: 1234
     driver-class-name: org.postgresql.Driver
 
-# JPA / Hibernate
+  # =========================
+  # JPA / Hibernate
+  # =========================
   jpa:
     hibernate:
       ddl-auto: none
+
     show-sql: true
 
-# Liquibase
+  # =========================
+  # Liquibase
+  # =========================
   liquibase:
     change-log: classpath:db/changelog/db.changelog-master.yaml
     enabled: false
 
+# =========================
 # Logging
+# =========================
 logging:
   level:
     org.springframework.boot.autoconfigure.jdbc: DEBUG
     org.springframework.security: TRACE
 
-# archive service
+# =========================
+# Archive Service
+# =========================
 archive:
   service:
     url: http://localhost:8085
 
-# secret
-security:
-  jwt:
-    secret: 9f8a7c6e5d4b3a2f1c0e9d8b7a6c5e4f
+# =========================
+# RSA
+# =========================
+rsa:
+  private-key: ${rsa-private-key}
+  public-key: classpath:certs/public.pem
