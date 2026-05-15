@@ -72,5 +72,8 @@ rsa:
 springdoc:
   api-docs:
     path: /v3/api-docs
+    enabled: false
   swagger-ui:
     path: /swagger-ui.html
+    csrf:
+      enabled: false

@@ -95,6 +95,18 @@ OPENSSL CMD
 
 ## 🧱 Prérequis Techniques / Technical Requirements
 
+
+13. Générer automatiquement clients API
+
+OpenAPI permet ensuite :
+
+génération TypeScript Angular
+génération React client
+génération Java SDK
+Postman collections
+
+Très utilisé en entreprise.
+
 | Composant / Component | Version |
 |-----------------------|----------|
 | Java | 17+ |
