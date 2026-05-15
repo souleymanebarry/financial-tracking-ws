@@ -1,7 +1,8 @@
-package com.barry.bank.financial.tracking_ws.controllers;
+package com.barry.bank.financial.tracking_ws.controllers.impl;
 
 
 import com.barry.bank.financial.tracking_ws.config.JwtService;
+import com.barry.bank.financial.tracking_ws.controllers.TokenRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
