@@ -14,7 +14,9 @@ import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import com.nimbusds.jose.jwk.RSAKey;
 
+import java.security.NoSuchAlgorithmException;
 import java.security.interfaces.RSAPrivateKey;
+import java.security.spec.InvalidKeySpecException;
 
 
 @Configuration
@@ -30,7 +32,7 @@ public class JwtEncoderAndDecoderConfig {
     }
 
     @Bean
-    public JwtEncoder jwtEncoder() throws Exception {
+    public JwtEncoder jwtEncoder() throws NoSuchAlgorithmException, InvalidKeySpecException {
         RSAPrivateKey privateKey = KeyUtils.parsePrivateKey(privateKeyPem);
 
         JWK jwk = new RSAKey.Builder(rsaKeyProperties.publicKey())
