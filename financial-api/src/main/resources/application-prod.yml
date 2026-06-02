@@ -1,0 +1,79 @@
+spring:
+  application:
+    name: financial-tracking-ws
+
+  # =========================
+  # Vault
+  # =========================
+
+  config:
+    import: vault://
+
+  cloud:
+    vault:
+      uri: http://127.0.0.1:8200
+      token: ${VAULT_TOKEN}
+
+      kv:
+        enabled: true
+        backend: secret
+        default-context: financial-tracking-ws/rsa
+
+  # =========================
+  # DataSource (PostgreSQL)
+  # =========================
+  datasource:
+    url: jdbc:postgresql://localhost:5432/financial-tracking-ws-db
+    username: postgres
+    password: ${POSTGRES_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+
+  # =========================
+  # JPA / Hibernate
+  # =========================
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: none
+    show-sql: false
+
+  # =========================
+  # Liquibase
+  # =========================
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+    enabled: false
+
+# =========================
+# Logging
+# =========================
+logging:
+  level:
+    org.springframework.boot.autoconfigure.jdbc: DEBUG
+    org.springframework.security: TRACE
+
+# =========================
+# Archive Service
+# =========================
+archive:
+  service:
+    url: http://localhost:8085
+
+# =========================
+# RSA
+# =========================
+rsa:
+  private-key: ${rsa-private-key}
+  public-key: classpath:certs/public.pem
+
+# =========================
+# SpringDoc (OPENAPI)
+# =========================
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+    enabled: false
+  swagger-ui:
+    path: /swagger-ui.html
+    csrf:
+      enabled: false
