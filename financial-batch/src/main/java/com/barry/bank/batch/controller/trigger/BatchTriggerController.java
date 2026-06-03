@@ -1,4 +1,4 @@
-package com.barry.bank.batch.trigger;
+package com.barry.bank.batch.controller.trigger;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -7,7 +7,6 @@ import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.JobParametersBuilder;
 import org.springframework.batch.core.launch.JobLauncher;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -32,7 +31,6 @@ public class BatchTriggerController {
 
     private final JobLauncher jobLauncher;
 
-    @Qualifier("generateMonthlyStatementsJob")
     private final Job generateMonthlyStatementsJob;
 
     @PostMapping("/trigger")
