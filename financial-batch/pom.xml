@@ -27,6 +27,20 @@
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
 
+        <!-- iText 7 — génération PDF relevés bancaires -->
+        <dependency>
+            <groupId>com.itextpdf</groupId>
+            <artifactId>kernel</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.itextpdf</groupId>
+            <artifactId>layout</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.itextpdf</groupId>
+            <artifactId>io</artifactId>
+        </dependency>
+
         <!-- JPA -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
