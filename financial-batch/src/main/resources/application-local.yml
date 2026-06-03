@@ -1,0 +1,40 @@
+server:
+  port: 8090  # Port dédié pour éviter le conflit avec financial-api (8080)
+
+# =========================
+# Batch scheduling (local)
+# =========================
+batch:
+  statement:
+    cron: "0 * * * * *"  # Toutes les minutes en local — à ajuster selon le besoin
+
+spring:
+  # =========================
+  # DataSource (PostgreSQL)
+  # =========================
+  datasource:
+    url: jdbc:postgresql://localhost:5432/financial-tracking-ws-db
+    username: postgres
+    password: ${POSTGRES_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+
+  # =========================
+  # Spring Batch
+  # =========================
+  batch:
+    jdbc:
+      initialize-schema: always  # Spring Batch crée ses tables metadata (local uniquement)
+
+  # =========================
+  # JPA
+  # =========================
+  jpa:
+    show-sql: true
+
+# =========================
+# Logging
+# =========================
+logging:
+  level:
+    org.springframework.batch: DEBUG
+    com.barry.bank.batch: DEBUG

@@ -9,6 +9,12 @@ databaseChangeLog:
       file: DDL/003_operation.sql
       relativeToChangelogFile: true
   - include:
+      file: DDL/004_bank_statement.sql
+      relativeToChangelogFile: true
+  - include:
+      file: DDL/005_statement_line.sql
+      relativeToChangelogFile: true
+  - include:
       file: DML/001_insert_customer_data.sql
       relativeToChangelogFile: true
   - include:

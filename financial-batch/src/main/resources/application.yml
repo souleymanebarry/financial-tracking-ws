@@ -1,0 +1,32 @@
+spring:
+  application:
+    name: financial-batch
+
+# =========================
+# Batch scheduling
+# =========================
+batch:
+  statement:
+    cron: "0 0 1 1 * *"  # 1er de chaque mois à 01h00 (surcharger dans application-local.yml)
+
+  # =========================
+  # Spring Batch
+  # =========================
+  batch:
+    job:
+      enabled: false  # Jobs déclenchés via @Scheduled ou JobLauncher — pas au démarrage
+
+  # =========================
+  # JPA / Hibernate
+  # =========================
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: none
+    show-sql: false
+
+  # =========================
+  # Liquibase
+  # =========================
+  liquibase:
+    enabled: false  # Schema métier géré par financial-persistence
