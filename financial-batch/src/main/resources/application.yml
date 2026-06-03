@@ -2,13 +2,6 @@ spring:
   application:
     name: financial-batch
 
-# =========================
-# Batch scheduling
-# =========================
-batch:
-  statement:
-    cron: "0 0 1 1 * *"  # 1er de chaque mois à 01h00 (surcharger dans application-local.yml)
-
   # =========================
   # Spring Batch
   # =========================
@@ -30,3 +23,12 @@ batch:
   # =========================
   liquibase:
     enabled: false  # Schema métier géré par financial-persistence
+
+# =========================
+# Batch
+# =========================
+batch:
+  statement:
+    cron: "0 0 1 1 * *"  # 1er de chaque mois à 01h00 (surcharger dans application-local.yml)
+  pdf:
+    output-dir: ./statements
