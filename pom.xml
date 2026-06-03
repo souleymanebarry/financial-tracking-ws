@@ -23,7 +23,8 @@
 		<module>financial-persistence</module>
 		<module>financial-application</module>
 		<module>financial-api</module>
-	</modules>
+        <module>financial-batch</module>
+    </modules>
 
 	<properties>
 		<java.version>17</java.version>

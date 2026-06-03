@@ -1,0 +1,19 @@
+--liquibase formatted sql
+--changeset sbarry:005_statement_line
+
+-- Table StatementLine (snapshot des opérations au moment de la génération du relevé)
+CREATE TABLE STATEMENT_LINE (
+  ID                UUID          NOT NULL,
+  STATEMENT_ID      UUID          NOT NULL,
+  OPERATION_NUMBER  VARCHAR(50),
+  OPERATION_DATE    TIMESTAMP     NOT NULL,
+  LABEL             VARCHAR(255)  NOT NULL,
+  AMOUNT            NUMERIC(20,2) NOT NULL,
+  OPERATION_TYPE    VARCHAR(10)   NOT NULL,
+  RUNNING_BALANCE   NUMERIC(20,2) NOT NULL,
+  CONSTRAINT STATEMENT_LINE_PK PRIMARY KEY (ID),
+  CONSTRAINT FK_STATEMENT_LINE_STATEMENT FOREIGN KEY (STATEMENT_ID) REFERENCES BANK_STATEMENT(ID)
+);
+
+-- Index pour récupérer les lignes d'un relevé
+CREATE INDEX IDX_STATEMENT_LINE_STATEMENT ON STATEMENT_LINE(STATEMENT_ID);
