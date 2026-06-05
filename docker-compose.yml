@@ -1,0 +1,29 @@
+services:
+
+  minio:
+    image: minio/minio:latest
+    container_name: financial-minio
+    ports:
+      - "9000:9000"   # API S3
+      - "9001:9001"   # Console web
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio-data:/data
+
+  vault:
+    image: hashicorp/vault:latest
+    container_name: financial-vault
+    ports:
+      - "8200:8200"
+    environment:
+      VAULT_DEV_ROOT_TOKEN_ID: myroot      # → VAULT_TOKEN=myroot dans ton .env
+      VAULT_DEV_LISTEN_ADDRESS: "0.0.0.0:8200"
+    cap_add:
+      - IPC_LOCK                           # requis par Vault pour sécuriser la mémoire
+    command: server -dev                   # mode dev : KV activé, pas de unseal, in-memory
+
+volumes:
+  minio-data:

@@ -38,6 +38,7 @@
 		<jacoco.version>0.8.12</jacoco.version>
 		<openapi.version>2.6.0</openapi.version>
 		<itext.version>7.2.6</itext.version>
+		<minio.version>8.5.10</minio.version>
 	</properties>
 
 	<dependencyManagement>
@@ -117,6 +118,13 @@
 				<groupId>com.itextpdf</groupId>
 				<artifactId>io</artifactId>
 				<version>${itext.version}</version>
+			</dependency>
+
+			<!-- MinIO -->
+			<dependency>
+				<groupId>io.minio</groupId>
+				<artifactId>minio</artifactId>
+				<version>${minio.version}</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
