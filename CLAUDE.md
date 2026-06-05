@@ -5,11 +5,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Build & Run Commands
 
 ```bash
-# Build all modules (skip tests)
+# Build all modules — rapide (skip compilation + exécution des tests) ~56s
+./mvnw clean install -Dmaven.test.skip=true
+
+# Build all modules — avec compilation des tests mais sans exécution ~1:16
 ./mvnw clean install -DskipTests
 
-# Build a single module
-./mvnw clean install -pl financial-api -am -DskipTests
+# Build un seul module et ses dépendances
+./mvnw clean install -pl financial-api -am -Dmaven.test.skip=true
+./mvnw clean install -pl financial-batch -am -Dmaven.test.skip=true
 
 # Run the application (requires Vault + PostgreSQL)
 ./mvnw spring-boot:run -pl financial-api -Dspring-boot.run.profiles=local

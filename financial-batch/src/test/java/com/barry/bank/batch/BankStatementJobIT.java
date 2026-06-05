@@ -25,12 +25,13 @@ import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.test.JobLauncherTestUtils;
 import org.springframework.batch.test.JobRepositoryTestUtils;
+import io.minio.MinioClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.math.BigDecimal;
-import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -40,6 +41,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest
 @ActiveProfiles("test")
 class BankStatementJobIT {
+
+    @MockBean MinioClient minioClient;
 
     @Autowired private JobLauncher  jobLauncher;
     @Autowired private JobRepository jobRepository;
@@ -104,11 +107,11 @@ class BankStatementJobIT {
         assertThat(statement.getOpeningBalance()).isEqualByComparingTo("700.00");
         assertThat(statement.getLines()).hasSize(3);
 
-        // then — PDF généré sur le disque
-        assertThat(statement.getFileUrl()).isNotNull();
-        Path pdf = Path.of(statement.getFileUrl());
-        assertThat(pdf).exists();
-        assertThat(pdf.toFile().length()).isGreaterThan(0);
+        // then — clé objet MinIO au bon format
+        assertThat(statement.getFileUrl())
+                .isNotNull()
+                .startsWith("statements/2026/05/")
+                .endsWith("_2026-05-01_2026-05-31.pdf");
     }
 
     @Test
