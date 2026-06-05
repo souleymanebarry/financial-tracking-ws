@@ -15,6 +15,9 @@ databaseChangeLog:
       file: DDL/005_statement_line.sql
       relativeToChangelogFile: true
   - include:
+      file: DDL/006_bank_statement_unique.sql
+      relativeToChangelogFile: true
+  - include:
       file: DML/001_insert_customer_data.sql
       relativeToChangelogFile: true
   - include:
