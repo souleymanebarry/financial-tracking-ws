@@ -15,6 +15,7 @@ import org.springframework.batch.core.Step;
 import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.step.builder.StepBuilder;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -25,6 +26,12 @@ public class BankStatementJobConfig {
 
     private final JobRepository jobRepository;
     private final PlatformTransactionManager transactionManager;
+
+    @Value("${batch.chunk.statement:10}")
+    private int chunkStatement;
+
+    @Value("${batch.chunk.pdf:5}")
+    private int chunkPdf;
 
     // Step 1 — génération des relevés (PENDING)
     private final BankAccountItemReader bankAccountItemReader;
@@ -47,7 +54,7 @@ public class BankStatementJobConfig {
     @Bean
     public Step generateStatementStep() {
         return new StepBuilder("generateStatementStep", jobRepository)
-                .<BankAccount, BankStatement>chunk(10, transactionManager)
+                .<BankAccount, BankStatement>chunk(chunkStatement, transactionManager)
                 .reader(bankAccountItemReader)
                 .processor(bankStatementProcessor)
                 .writer(bankStatementWriter)
@@ -57,7 +64,7 @@ public class BankStatementJobConfig {
     @Bean
     public Step generatePdfStep() {
         return new StepBuilder("generatePdfStep", jobRepository)
-                .<BankStatement, StatementPdfResult>chunk(5, transactionManager)
+                .<BankStatement, StatementPdfResult>chunk(chunkPdf, transactionManager)
                 .reader(pendingStatementItemReader)
                 .processor(bankStatementPdfProcessor)
                 .writer(bankStatementPdfWriter)

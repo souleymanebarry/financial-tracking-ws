@@ -30,19 +30,27 @@ import java.time.LocalDate;
 public class BatchTriggerController {
 
     private final JobLauncher jobLauncher;
-
-    private final Job generateMonthlyStatementsJob;
+    private final Job         generateMonthlyStatementsJob;
 
     @PostMapping("/trigger")
     public ResponseEntity<String> trigger(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate periodStart,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate periodEnd) {
 
+        if (periodStart.isAfter(periodEnd)) {
+            return ResponseEntity.badRequest()
+                    .body("periodStart (%s) doit être avant periodEnd (%s)".formatted(periodStart, periodEnd));
+        }
+        if (periodEnd.isAfter(LocalDate.now())) {
+            return ResponseEntity.badRequest()
+                    .body("periodEnd (%s) ne peut pas être dans le futur".formatted(periodEnd));
+        }
+
         try {
             JobParameters params = new JobParametersBuilder()
                     .addString("periodStart", periodStart.toString())
-                    .addString("periodEnd", periodEnd.toString())
-                    .addLong("timestamp", System.currentTimeMillis())
+                    .addString("periodEnd",   periodEnd.toString())
+                    .addLong("timestamp",     System.currentTimeMillis())
                     .toJobParameters();
 
             log.info("Déclenchement manuel — période: {} → {}", periodStart, periodEnd);

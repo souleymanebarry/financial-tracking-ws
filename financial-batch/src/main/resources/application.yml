@@ -25,10 +25,20 @@ spring:
     enabled: false  # Schema métier géré par financial-persistence
 
 # =========================
-# Batch
+# Batch scheduling
 # =========================
 batch:
   statement:
     cron: "0 0 1 1 * *"  # 1er de chaque mois à 01h00 (surcharger dans application-local.yml)
-  pdf:
-    output-dir: ./statements
+  chunk:
+    statement: 10   # comptes traités par chunk — Step 1
+    pdf: 5          # relevés traités par chunk — Step 2
+
+# =========================
+# MinIO
+# =========================
+minio:
+  endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
+  access-key: ${MINIO_ACCESS_KEY:minioadmin}
+  secret-key: ${MINIO_SECRET_KEY:minioadmin}
+  bucket: bank-statements

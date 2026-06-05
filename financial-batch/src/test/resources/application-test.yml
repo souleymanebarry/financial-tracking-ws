@@ -22,5 +22,9 @@ spring:
 batch:
   statement:
     cron: "0 0 1 1 * *"
-  pdf:
-    output-dir: ./target/test-statements
+
+minio:
+  endpoint: http://localhost:9000
+  access-key: minioadmin
+  secret-key: minioadmin
+  bucket: bank-statements

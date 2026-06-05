@@ -288,3 +288,108 @@ Si tu veux, je peux te fournir :
 
 financial-tracking ---> signe avec PRIVATE KEY
 financial-archive  ---> vérifie avec PUBLIC KEY
+
+● Ne crée pas le bucket manuellement — le CommandLineRunner dans MinioConfig le crée automatiquement au démarrage de l'application.                                                                                                          
+                                                                                                                                                                                                                                             
+  La séquence complète :                                                                                                                                                                                                                     
+                                                                                                                                                                                                                                             
+  1. Démarre le batch                                                                                                                                                                                                                        
+  ./mvnw spring-boot:run -pl financial-batch -Dspring-boot.run.profiles=local                                                                                                                                                                
+  Au démarrage tu verras dans les logs :                                                                                                                                                                                                     
+  Bucket MinIO créé : bank-statements                                                                                                                                                                                                        
+                                                                                                                                                                                                                                             
+  2. Déclenche le batch via l'endpoint                                                                                                                                                                                                       
+  POST http://localhost:8090/batch/statements/trigger?periodStart=2026-05-01&periodEnd=2026-05-31                                                                                                                                            
+                                                                                                                                                                                                                                             
+  3. Vérifie dans la console MinIO                                                                                                                                                                                                           
+                                                                                                                                                                                                                                             
+  http://localhost:9001 → Buckets → bank-statements → tu verras les PDFs avec la structure :                                                                                                                                                 
+  statements/                                                                                                                                                                                                                                
+    2026/                                                                                                                                                                                                                                    
+      05/                                                                                                                                                                                                                                    
+        {accountId}_2026-05-01_2026-05-31.pdf                                                                                                                                                                                                
+                                                                                                                                                                                                                                             
+  4. Télécharge un PDF depuis la console pour valider le contenu.  
+
+
+
+Oui, très simple — c'est justement l'intérêt de MinIO : il implémente l'API S3 d'AWS à 100%.
+
+Pour migrer, aucune ligne de code à changer dans le writer ou le config. Uniquement de la configuration :
+
+# application-prod.yml
+minio:
+  endpoint: https://s3.eu-west-3.amazonaws.com  # région AWS
+  access-key: ${AWS_ACCESS_KEY_ID}
+  secret-key: ${AWS_SECRET_ACCESS_KEY}
+  bucket: bank-statements-prod
+
+Le MinioClient accepte n'importe quel endpoint S3-compatible — AWS S3, MinIO, OVH Object Storage, Scaleway, etc.
+
+---
+Une seule limite : si tu veux exploiter des fonctionnalités AWS natives (IAM roles, S3 Transfer Acceleration, S3 Event Notifications, presigned URLs avec STS...), il faudrait à terme migrer vers le SDK AWS v2 (software.amazon.awssdk:s3). Mais ça représente ~30 lignes de changement dans BankStatementPdfWriter et MinioConfig — rien de structurel.
+
+Pour le moment le SDK MinIO est le bon choix : il couvre 100% du besoin actuel et laisse la porte ouverte.
+WARNING! dev mode is enabled! In this mode, Vault runs entirely in-memory
+and starts unsealed with a single unseal key. The root token is already
+authenticated to the CLI, so you can immediately begin using Vault.
+
+You may need to set the following environment variables:
+
+PowerShell:
+    $env:VAULT_ADDR="http://127.0.0.1:8200"
+cmd.exe:
+    set VAULT_ADDR=http://127.0.0.1:8200
+
+The unseal key and root token are displayed below in case you want to
+seal/unseal the Vault or re-authenticate.
+
+Development mode should NOT be used in production installations!
+
+
+● Oui, exactement. Le flow complet :                                                                                                                                                                                                
+                                                                                                                                                                                                                                    
+  Step 1 — BankAccountItemReader lit tous les comptes ACTIVATED (sans filtre de compte), BankStatementProcessor génère un relevé par compte pour la période donnée.                                                                 
+                                                                                                                                                                                                                                    
+  Step 2 — PendingStatementItemReader lit tous les relevés PENDING créés au step 1, génère le PDF et l'upload dans MinIO.                                                                                                           
+                                                                                                                                                                                                                                    
+  Donc pour une période 2025-05-01 → 2025-05-31, si tu as 5 comptes activés → 5 relevés en DB + 5 PDFs dans MinIO.    
+  
+--------------------------------------------------
+ ├───────────┼────────────────────────────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤   
+ │ Processor │ BankStatementPdfProcessor  │ Génère le PDF via iText 7 en mémoire (ByteArrayOutputStream). Utilise ThreadLocal<NumberFormat> pour la thread-safety. Retourne un StatementPdfResult (record = statement + bytes) │   
+ ├───────────┼────────────────────────────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤   
+ │ Writer    │ BankStatementPdfWriter     │ Upload le PDF dans MinIO avec une clé déterministe (statements/{year}/{month}/{accountId}_{start}_{end}.pdf), puis passe le statut PENDING → GENERATED                             │   
+ └───────────┴────────────────────────────┴────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘   
+                                                                                                                                                                                                                                    
+  ---                                                                                                                                                                                                                               
+  Déclenchement                                                                                                                                                                                                                     
+                                                                                                                                                                                                                                    
+  Deux modes :                                                                                                                                                                                                                      
+                                                                                                                                                                                                                                    
+  1. Scheduler automatique (BankStatementScheduler) — @Scheduled(cron = "${batch.statement.cron}"), calcule automatiquement la période du mois précédent, et vérifie via JobExplorer qu'aucune exécution n'est déjà active avant de 
+  lancer.                                                                                                                                                                                                                           
+  2. Trigger manuel (BatchTriggerController) — POST /batch/statements/trigger?periodStart=...&periodEnd=..., pour les relances ou tests locaux. Valide que periodStart < periodEnd et que periodEnd n'est pas dans le futur.        
+                                                                                                                                                                                                                                    
+  ---                                                                                               
+
+
+● Le mois de mai 2025 est de loin le plus chargé. Utilise cette URL :                                                                                                                                                               
+                                                                                                                                                                                                                                    
+  POST http://localhost:8090/batch/statements/trigger?periodStart=2025-05-01&periodEnd=2025-05-31                                                                                                                                   
+                                                                                                                                                                                                                                    
+  Classement des mois les plus denses dans les données de seed :                                                                                                                                                                    
+                                                                                                                                                                                                                                    
+  ┌─────────┬─────────────────┐                                                                                                                                                                                                     
+  │  Mois   │ Nb d'opérations │                                                                                                                                                                                                     
+  ├─────────┼─────────────────┤                                                                                                                                                                                                     
+  │ 2025-05 │ ~390 000        │                                                                                                                                                                                                     
+  ├─────────┼─────────────────┤                                                                                                                                                                                                     
+  │ 2025-04 │ ~314 000        │                                                                                                                                                                                                     
+  ├─────────┼─────────────────┤                                                                                                                                                                                                     
+  │ 2025-03 │ ~285 000        │                                                                                                                                                                                                     
+  ├─────────┼─────────────────┤                                                                                                                                                                                                     
+  │ 2025-01 │ ~230 000        │                                                                                                                                                                                                     
+  └─────────┴─────────────────┘                                                                                                                                                                                                     
+                                                                                                                                                                                                                                    
+  Si tu veux tester avec moins de volume pour un premier essai, 2025-03 ou 2025-04 sont aussi de bons candidats.      
