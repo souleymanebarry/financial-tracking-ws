@@ -9,6 +9,9 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
+
 @Configuration
 @EnableConfigurationProperties(MinioProperties.class)
 @Log4j2
@@ -16,6 +19,11 @@ public class MinioConfig {
 
     private static final int MAX_ATTEMPTS   = 3;
     private static final int RETRY_DELAY_MS = 2000;
+
+    @Bean("minioUploadExecutor")
+    public Executor minioUploadExecutor() {
+        return Executors.newCachedThreadPool();
+    }
 
     @Bean
     public MinioClient minioClient(MinioProperties props) {
