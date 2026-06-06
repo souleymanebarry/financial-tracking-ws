@@ -5,9 +5,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import org.hibernate.annotations.UuidGenerator;
 import jakarta.persistence.OneToMany;
 
 import lombok.AllArgsConstructor;
@@ -31,7 +30,8 @@ import java.util.UUID;
 @ToString(exclude = "bankAccounts")
 public class Customer {
 
-    @Id @GeneratedValue(strategy = GenerationType.UUID)
+    @Id
+    @UuidGenerator(style = UuidGenerator.Style.TIME)
     private UUID customerId;
 
     private String firstName;
