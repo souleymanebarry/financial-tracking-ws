@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<fop version="1.0">
+    <renderers>
+        <renderer mime="application/pdf">
+            <!-- Compression flate pour réduire la taille du PDF -->
+            <filterList>
+                <value>flate</value>
+            </filterList>
+            <fonts>
+                <!--
+                    Pour la production, remplacer <auto-detect/> par des polices TTF embarquées
+                    afin de garantir le rendu des caractères spéciaux (€, etc.) sur tous environnements.
+                    Exemple :
+                    <font embed-url="fonts/DejaVuSans.ttf" kerning="yes">
+                        <font-triplet name="DejaVu Sans" style="normal" weight="normal"/>
+                    </font>
+                -->
+                <auto-detect/>
+            </fonts>
+        </renderer>
+    </renderers>
+</fop>

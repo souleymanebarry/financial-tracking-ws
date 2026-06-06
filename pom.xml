@@ -24,7 +24,8 @@
 		<module>financial-application</module>
 		<module>financial-api</module>
         <module>financial-batch</module>
-    </modules>
+		<module>financial-document</module>
+	</modules>
 
 	<properties>
 		<java.version>17</java.version>
@@ -71,6 +72,11 @@
 			<dependency>
 				<groupId>com.barry.bank</groupId>
 				<artifactId>financial-test-support</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.barry.bank</groupId>
+				<artifactId>financial-document</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<!-- MAPSTRUCT -->
@@ -126,6 +132,7 @@
 				<artifactId>minio</artifactId>
 				<version>${minio.version}</version>
 			</dependency>
+
 		</dependencies>
 	</dependencyManagement>
 
