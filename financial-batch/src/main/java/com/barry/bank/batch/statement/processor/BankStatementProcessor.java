@@ -10,6 +10,8 @@ import com.barry.bank.persistence.repositories.OperationRepository;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.batch.core.StepExecution;
+import org.springframework.batch.core.annotation.BeforeStep;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,7 +22,10 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 
 /**
  * Calcule les soldes et construit les lignes d'un {@link BankStatement} pour chaque {@link BankAccount}.
@@ -52,13 +57,22 @@ public class BankStatementProcessor implements ItemProcessor<BankAccount, BankSt
     @Value("#{jobParameters['periodEnd']}")
     private String periodEndParam;
 
-    private LocalDate periodStart;
-    private LocalDate periodEnd;
+    private LocalDate    periodStart;
+    private LocalDate    periodEnd;
+    private Set<UUID>    processedAccountIds = Set.of();
 
     @PostConstruct
     private void parsePeriod() {
         periodStart = LocalDate.parse(periodStartParam);
         periodEnd   = LocalDate.parse(periodEndParam);
+    }
+
+    @BeforeStep
+    public void loadProcessedAccounts(StepExecution stepExecution) {
+        processedAccountIds = new HashSet<>(
+                bankStatementRepository.findAccountIdsByPeriod(periodStart, periodEnd));
+        log.info("Idempotence — {} relevé(s) déjà généré(s) pour la période {} → {}",
+                processedAccountIds.size(), periodStart, periodEnd);
     }
 
     /**
@@ -87,8 +101,7 @@ public class BankStatementProcessor implements ItemProcessor<BankAccount, BankSt
     }
 
     private boolean statementAlreadyExists(BankAccount account) {
-        return bankStatementRepository.existsByAccount_AccountIdAndPeriodStartAndPeriodEnd(
-                account.getAccountId(), periodStart, periodEnd);
+        return processedAccountIds.contains(account.getAccountId());
     }
 
     private List<Operation> fetchPeriodOperations(BankAccount account) {
@@ -99,9 +112,9 @@ public class BankStatementProcessor implements ItemProcessor<BankAccount, BankSt
     }
 
     private BigDecimal computeClosingBalance(BankAccount account) {
-        List<Operation> opsAfterPeriod = operationRepository.findByAccount_AccountIdAndOperationDateAfter(
+        BigDecimal sumAfter = operationRepository.sumAmountByAccountAndDateAfter(
                 account.getAccountId(), periodEnd.atTime(LocalTime.MAX));
-        return account.getBalance().subtract(sumOf(opsAfterPeriod));
+        return account.getBalance().subtract(sumAfter);
     }
 
     private BankStatement buildStatement(BankAccount account, BigDecimal opening, BigDecimal closing) {

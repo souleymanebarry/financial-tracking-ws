@@ -18,7 +18,8 @@ public interface BankStatementRepository extends JpaRepository<BankStatement, UU
     @Query("SELECT s.id FROM BankStatement s WHERE s.status = :status ORDER BY s.generatedAt ASC")
     Page<UUID> findIdsByStatus(@Param("status") StatementStatus status, Pageable pageable);
 
-    // Passe 2 : chargement complet par IDs avec JOIN FETCH
+    // Passe 2 : chargement complet par IDs — JOIN FETCH nécessaire car les statements
+    // traversent plusieurs chunks et sont détachés entre les transactions de chunk
     @Query("""
             SELECT DISTINCT s FROM BankStatement s
             LEFT JOIN FETCH s.lines
@@ -40,4 +41,9 @@ public interface BankStatementRepository extends JpaRepository<BankStatement, UU
 
     boolean existsByAccount_AccountIdAndPeriodStartAndPeriodEnd(
             UUID accountId, LocalDate periodStart, LocalDate periodEnd);
+
+    @Query("SELECT s.account.accountId FROM BankStatement s " +
+           "WHERE s.periodStart = :start AND s.periodEnd = :end")
+    List<UUID> findAccountIdsByPeriod(@Param("start") LocalDate start,
+                                      @Param("end") LocalDate end);
 }
