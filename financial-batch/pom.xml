@@ -27,21 +27,13 @@
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
 
-        <!-- iText 7 — génération PDF relevés bancaires -->
+        <!-- financial-document — génération PDF relevés (FOP) -->
         <dependency>
-            <groupId>com.itextpdf</groupId>
-            <artifactId>kernel</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.itextpdf</groupId>
-            <artifactId>layout</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.itextpdf</groupId>
-            <artifactId>io</artifactId>
+            <groupId>com.barry.bank</groupId>
+            <artifactId>financial-document</artifactId>
         </dependency>
 
-        <!-- MinIO — stockage PDF des relevés -->
+        <!-- MinIO — stockage PDF bankStatement -->
         <dependency>
             <groupId>io.minio</groupId>
             <artifactId>minio</artifactId>
