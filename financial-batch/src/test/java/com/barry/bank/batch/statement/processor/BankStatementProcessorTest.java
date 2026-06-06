@@ -27,6 +27,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.mock;
 
 @ExtendWith(MockitoExtension.class)
 class BankStatementProcessorTest {
@@ -47,33 +48,32 @@ class BankStatementProcessorTest {
         ReflectionTestUtils.setField(processor, "periodStartParam", PERIOD_START.toString());
         ReflectionTestUtils.setField(processor, "periodEndParam",   PERIOD_END.toString());
         ReflectionTestUtils.invokeMethod(processor, "parsePeriod");
+        when(bankStatementRepository.findAccountIdsByPeriod(PERIOD_START, PERIOD_END))
+                .thenReturn(List.of());
+        processor.loadProcessedAccounts(mock(org.springframework.batch.core.StepExecution.class));
     }
 
     @Test
     void shouldReturnNullWhenStatementAlreadyExists() {
-        // given
-        CurrentAccount account = account();
-        when(bankStatementRepository.existsByAccount_AccountIdAndPeriodStartAndPeriodEnd(
-                ACCOUNT_ID, PERIOD_START, PERIOD_END)).thenReturn(true);
+        // given — recharger le Set avec ACCOUNT_ID déjà traité
+        when(bankStatementRepository.findAccountIdsByPeriod(PERIOD_START, PERIOD_END))
+                .thenReturn(List.of(ACCOUNT_ID));
+        processor.loadProcessedAccounts(mock(org.springframework.batch.core.StepExecution.class));
 
         // when
-        BankStatement result = processor.process(account);
+        BankStatement result = processor.process(account());
 
         // then
         assertThat(result).isNull();
-        verify(operationRepository, never()).findByAccount_AccountIdAndOperationDateAfter(any(), any());
+        verify(operationRepository, never()).sumAmountByAccountAndDateAfter(any(), any());
         verify(operationRepository, never()).findByAccount_AccountIdAndOperationDateBetweenOrderByOperationDateAsc(any(), any(), any());
     }
 
     @Test
     void shouldComputeClosingBalanceBySubtractingOpsAfterPeriod() {
-        // given — balance=1500, ops après période : +200, +300 → closing = 1500-500 = 1000
+        // given — balance=1500, somme des ops après période = 500 → closing = 1500-500 = 1000
         CurrentAccount account = account(new BigDecimal("1500.00"));
-        stubNoExistingStatement();
-        stubOpsAfterPeriod(List.of(
-                op(new BigDecimal("200.00"), OperationType.CREDIT),
-                op(new BigDecimal("300.00"), OperationType.CREDIT)
-        ));
+        stubSumAfterPeriod(new BigDecimal("500.00"));
         stubPeriodOps(List.of());
 
         // when
@@ -89,8 +89,7 @@ class BankStatementProcessorTest {
         // given — closing=1000 (balance=1000, rien après), ops période : +400, -100 → net=300
         //         opening = 1000 - 300 = 700
         CurrentAccount account = account(new BigDecimal("1000.00"));
-        stubNoExistingStatement();
-        stubOpsAfterPeriod(List.of());
+        stubSumAfterPeriod(BigDecimal.ZERO);
         stubPeriodOps(List.of(
                 op(new BigDecimal("400.00"),  OperationType.CREDIT),
                 op(new BigDecimal("-100.00"), OperationType.DEBIT)
@@ -109,8 +108,7 @@ class BankStatementProcessorTest {
     void shouldCreateStatementAsPending() {
         // given
         CurrentAccount account = account();
-        stubNoExistingStatement();
-        stubOpsAfterPeriod(List.of());
+        stubSumAfterPeriod(BigDecimal.ZERO);
         stubPeriodOps(List.of());
 
         // when
@@ -129,8 +127,7 @@ class BankStatementProcessorTest {
     void shouldBuildStatementLinesAsSnapshots() {
         // given — 2 ops en période
         CurrentAccount account = account();
-        stubNoExistingStatement();
-        stubOpsAfterPeriod(List.of());
+        stubSumAfterPeriod(BigDecimal.ZERO);
         stubPeriodOps(List.of(
                 op("OP-001", new BigDecimal("200.00"),  OperationType.CREDIT, "Virement",
                         LocalDateTime.of(2026, 5, 5, 10, 0)),
@@ -156,8 +153,7 @@ class BankStatementProcessorTest {
         // given — opening=600, ops : +300, -100, +200
         // running : 900 → 800 → 1000 (= closing)
         CurrentAccount account = account(new BigDecimal("1000.00"));
-        stubNoExistingStatement();
-        stubOpsAfterPeriod(List.of());
+        stubSumAfterPeriod(BigDecimal.ZERO);
         stubPeriodOps(List.of(
                 op(new BigDecimal("300.00"),  OperationType.CREDIT),
                 op(new BigDecimal("-100.00"), OperationType.DEBIT),
@@ -180,8 +176,7 @@ class BankStatementProcessorTest {
     void shouldHandleNoOperationsInPeriod() {
         // given — aucune op dans la période ni après
         CurrentAccount account = account(new BigDecimal("2000.00"));
-        stubNoExistingStatement();
-        stubOpsAfterPeriod(List.of());
+        stubSumAfterPeriod(BigDecimal.ZERO);
         stubPeriodOps(List.of());
 
         // when
@@ -198,15 +193,14 @@ class BankStatementProcessorTest {
     void shouldQueryRepositoriesWithCorrectBoundaries() {
         // given
         CurrentAccount account = account();
-        stubNoExistingStatement();
-        stubOpsAfterPeriod(List.of());
+        stubSumAfterPeriod(BigDecimal.ZERO);
         stubPeriodOps(List.of());
 
         // when
         processor.process(account);
 
         // then — bornes exactes passées aux requêtes
-        verify(operationRepository).findByAccount_AccountIdAndOperationDateAfter(
+        verify(operationRepository).sumAmountByAccountAndDateAfter(
                 ACCOUNT_ID, PERIOD_END.atTime(LocalTime.MAX));
 
         verify(operationRepository).findByAccount_AccountIdAndOperationDateBetweenOrderByOperationDateAsc(
@@ -240,14 +234,9 @@ class BankStatementProcessorTest {
                 .build();
     }
 
-    private void stubNoExistingStatement() {
-        when(bankStatementRepository.existsByAccount_AccountIdAndPeriodStartAndPeriodEnd(
-                ACCOUNT_ID, PERIOD_START, PERIOD_END)).thenReturn(false);
-    }
-
-    private void stubOpsAfterPeriod(List<Operation> ops) {
-        when(operationRepository.findByAccount_AccountIdAndOperationDateAfter(
-                any(UUID.class), any(LocalDateTime.class))).thenReturn(ops);
+    private void stubSumAfterPeriod(BigDecimal sum) {
+        when(operationRepository.sumAmountByAccountAndDateAfter(
+                any(UUID.class), any(LocalDateTime.class))).thenReturn(sum);
     }
 
     private void stubPeriodOps(List<Operation> ops) {
