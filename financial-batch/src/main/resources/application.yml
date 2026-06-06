@@ -17,6 +17,12 @@ spring:
     hibernate:
       ddl-auto: none
     show-sql: false
+    properties:
+      hibernate:
+        jdbc:
+          batch_size: 50   # = batch.chunk.statement
+        order_inserts: true
+        order_updates: true
 
   # =========================
   # Liquibase
@@ -31,8 +37,8 @@ batch:
   statement:
     cron: "0 0 1 1 * *"  # 1er de chaque mois à 01h00 (surcharger dans application-local.yml)
   chunk:
-    statement: 10   # comptes traités par chunk — Step 1
-    pdf: 5          # relevés traités par chunk — Step 2
+    statement: 50   # comptes traités par chunk — Step 1
+    pdf: 10         # relevés traités par chunk — Step 2
 
 # =========================
 # MinIO
