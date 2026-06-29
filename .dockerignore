@@ -1,0 +1,35 @@
+# Git
+.git
+.gitignore
+
+# Maven build output
+**/target/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+*.classpath
+*.project
+*.settings/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docs & misc
+*.md
+*.txt
+!financial-batch/src/main/resources/**/*.txt
+
+# Docker
+Dockerfile
+.dockerignore
+
+# Test reports
+**/surefire-reports/
+**/failsafe-reports/
+
+# Logs
+*.log
+logs/
