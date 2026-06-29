@@ -5,6 +5,8 @@ import com.barry.bank.domain.entities.CurrentAccount;
 import com.barry.bank.domain.entities.Customer;
 import com.barry.bank.domain.entities.Operation;
 import com.barry.bank.domain.entities.SavingAccount;
+import com.barry.bank.domain.exception.DuplicateResourceException;
+import com.barry.bank.domain.exception.ResourceNotFoundException;
 import com.barry.bank.persistence.repositories.BankAccountRepository;
 import com.barry.bank.persistence.repositories.CustomerRepository;
 import com.barry.bank.persistence.repositories.OperationRepository;
@@ -117,7 +119,7 @@ class CustomerServiceImplTest {
 
         // Act + Assert
         assertThatThrownBy(() -> customerService.createCustomer(customer))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(DuplicateResourceException.class)
                 .hasMessageContaining("Customer with this email already exists");
 
         // verify
@@ -212,7 +214,7 @@ class CustomerServiceImplTest {
 
         // Act + Assert
         assertThatThrownBy(() -> customerService.getCustomerById(customerId))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessageContaining("Customer not found with ID:" + customerId);
 
         // verify
@@ -252,7 +254,7 @@ class CustomerServiceImplTest {
 
         // Act + Assert
         assertThatThrownBy(() -> customerService.partiallyUpdateCustomer(customerId, customer))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessageContaining("Customer not found with ID:" + customerId);
 
         // verify
@@ -310,7 +312,7 @@ class CustomerServiceImplTest {
 
         // Act + Assert
         assertThatThrownBy(() -> customerService.deleteCustomer(customerId))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessageContaining("Customer not found with ID:" + customerId);
 
         // verify

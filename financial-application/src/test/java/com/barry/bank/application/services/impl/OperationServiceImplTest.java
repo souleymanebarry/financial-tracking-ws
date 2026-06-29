@@ -3,6 +3,8 @@ package com.barry.bank.application.services.impl;
 import com.barry.bank.domain.entities.BankAccount;
 import com.barry.bank.domain.entities.CurrentAccount;
 import com.barry.bank.domain.entities.Operation;
+import com.barry.bank.domain.exception.InsufficientBalanceException;
+import com.barry.bank.domain.exception.ResourceNotFoundException;
 import com.barry.bank.persistence.repositories.BankAccountRepository;
 import com.barry.bank.persistence.repositories.OperationRepository;
 
@@ -79,7 +81,7 @@ class OperationServiceImplTest {
         when(accountRepository.findById(accountId)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> operationService.debitAccount(accountId, BigDecimal.valueOf(200), "desc"))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessageContaining("Account not found with Id: " + accountId);
 
         verify(accountRepository, times(1)).findById(accountId);
@@ -98,7 +100,7 @@ class OperationServiceImplTest {
         when(accountRepository.findById(accountId)).thenReturn(Optional.of(account));
 
         assertThatThrownBy(() -> operationService.debitAccount(accountId, BigDecimal.valueOf(200_000), "desc"))
-                .isInstanceOf(IllegalStateException.class)
+                .isInstanceOf(InsufficientBalanceException.class)
                 .hasMessageContaining("Insufficient balance for a debit transaction");
 
         verify(accountRepository, times(1)).findById(accountId);
@@ -185,7 +187,7 @@ class OperationServiceImplTest {
         when(accountRepository.findById(accountId)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> operationService.creditAccount(accountId, BigDecimal.valueOf(200), "desc"))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessageContaining("Account not found with Id: " + accountId);
 
         verify(accountRepository, times(1)).findById(accountId);
