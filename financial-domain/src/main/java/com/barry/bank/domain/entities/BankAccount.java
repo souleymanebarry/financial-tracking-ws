@@ -1,6 +1,7 @@
 package com.barry.bank.domain.entities;
 
 import com.barry.bank.domain.entities.enums.AccountStatus;
+import com.barry.bank.domain.exception.InsufficientBalanceException;
 import jakarta.persistence.Column;
 import jakarta.persistence.DiscriminatorColumn;
 import jakarta.persistence.DiscriminatorType;
@@ -63,6 +64,39 @@ public abstract class BankAccount {
     @OneToMany(mappedBy = "account", fetch = FetchType.LAZY)
     @Builder.Default
     private List<Operation> operations = new ArrayList<>();
+
+    /**
+     * Applies a debit to this account. Enforces the core invariant that the
+     * balance can never go below zero.
+     *
+     * @param amount a strictly positive amount to withdraw
+     * @throws IllegalArgumentException    if the amount is null or not strictly positive
+     * @throws InsufficientBalanceException if the balance is lower than the amount
+     */
+    public void debit(BigDecimal amount) {
+        requirePositiveAmount(amount);
+        if (balance.compareTo(amount) < 0) {
+            throw new InsufficientBalanceException(accountId, balance, amount);
+        }
+        this.balance = balance.subtract(amount);
+    }
+
+    /**
+     * Applies a credit to this account.
+     *
+     * @param amount a strictly positive amount to deposit
+     * @throws IllegalArgumentException if the amount is null or not strictly positive
+     */
+    public void credit(BigDecimal amount) {
+        requirePositiveAmount(amount);
+        this.balance = balance.add(amount);
+    }
+
+    private static void requirePositiveAmount(BigDecimal amount) {
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Amount must be greater than zero");
+        }
+    }
 
     @Override
     public boolean equals(Object o) {
