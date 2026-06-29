@@ -6,6 +6,8 @@ import com.barry.bank.domain.entities.Customer;
 import com.barry.bank.domain.entities.Operation;
 import com.barry.bank.domain.entities.SavingAccount;
 import com.barry.bank.application.services.OperationService;
+import com.barry.bank.domain.exception.BusinessRuleException;
+import com.barry.bank.domain.exception.ResourceNotFoundException;
 import com.barry.bank.persistence.repositories.BankAccountRepository;
 import com.barry.bank.persistence.repositories.CustomerRepository;
 import com.barry.bank.persistence.repositories.OperationRepository;
@@ -93,7 +95,7 @@ class BankAccountServiceImplTest {
 
         //Act + Assert
         assertThatThrownBy(()->accountService.createCurrentAccount(account, customer))
-                .isInstanceOf(IllegalStateException.class)
+                .isInstanceOf(BusinessRuleException.class)
                 .hasMessageContaining("CurrentAccount must have an overDraft");
 
         //verify
@@ -112,7 +114,7 @@ class BankAccountServiceImplTest {
 
         //Act Assert
         assertThatThrownBy(()-> accountService.createCurrentAccount(account, customer))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessageContaining("Customer not found with ID: " + customer.getCustomerId());
 
         //verify
@@ -194,7 +196,7 @@ class BankAccountServiceImplTest {
 
         //Act + Assert
         assertThatThrownBy(()->accountService.createSavingAccount(account, customer))
-                .isInstanceOf(IllegalStateException.class)
+                .isInstanceOf(BusinessRuleException.class)
                 .hasMessageContaining("SavingAccount must have an InterestRate");
 
         //verify
@@ -213,7 +215,7 @@ class BankAccountServiceImplTest {
 
         //Act Assert
         assertThatThrownBy(()-> accountService.createSavingAccount(account, customer))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessageContaining("Customer not found with ID: " + customer.getCustomerId());
 
         //verify
@@ -325,7 +327,7 @@ class BankAccountServiceImplTest {
 
         //Act + Assert
         assertThatThrownBy(() -> accountService.transferBetweenAccounts(sourceAccountId, destinationAccountId, amount))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessageContaining("Account not found with Id: "+sourceAccountId);
 
         //verify
@@ -348,7 +350,7 @@ class BankAccountServiceImplTest {
 
         //Act + Assert
         assertThatThrownBy(() -> accountService.transferBetweenAccounts(sourceAccountId, destinationAccountId, amount))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessageContaining("Account not found with Id: "+destinationAccountId);
 
         //verify
@@ -370,7 +372,7 @@ class BankAccountServiceImplTest {
 
         // Act + Assert
         assertThatThrownBy(() -> accountService.transferBetweenAccounts(accountId, accountId, amount))
-                .isInstanceOf(IllegalStateException.class)
+                .isInstanceOf(BusinessRuleException.class)
                 .hasMessageContaining("Source account must be different from destination account");
 
         //verify
@@ -474,7 +476,7 @@ class BankAccountServiceImplTest {
 
         // Act  + Assert
         assertThatThrownBy(() -> accountService.getAccountOperationsPage(accountId, page, size))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessageContaining("Account not found with Id: "+accountId);
 
         //verify
@@ -571,7 +573,7 @@ class BankAccountServiceImplTest {
         when(accountRepository.findById(accountId)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> accountService.getAccountTransactionHistory(accountId))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessageContaining("Account not found with Id: "+accountId);
 
         //verify
