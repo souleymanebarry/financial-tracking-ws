@@ -1,6 +1,10 @@
 package com.barry.bank.api.controllers;
 
 import com.barry.bank.api.exception.ArchiveServiceException;
+import com.barry.bank.domain.exception.BusinessRuleException;
+import com.barry.bank.domain.exception.DuplicateResourceException;
+import com.barry.bank.domain.exception.InsufficientBalanceException;
+import com.barry.bank.domain.exception.ResourceNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.log4j.Log4j2;
@@ -37,8 +41,26 @@ public class GlobalExceptionHandler {
         return problem;
     }
 
-    @ExceptionHandler(IllegalStateException.class)
-    public ProblemDetail handleIllegalState(IllegalStateException ex, HttpServletRequest request) {
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ProblemDetail handleResourceNotFound(ResourceNotFoundException ex, HttpServletRequest request) {
+        log.warn("Resource not found on {}: {}", request.getRequestURI(), ex.getMessage());
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
+        problem.setTitle("Resource Not Found");
+        problem.setInstance(URI.create(request.getRequestURI()));
+        return problem;
+    }
+
+    @ExceptionHandler(DuplicateResourceException.class)
+    public ProblemDetail handleDuplicateResource(DuplicateResourceException ex, HttpServletRequest request) {
+        log.warn("Conflict on {}: {}", request.getRequestURI(), ex.getMessage());
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
+        problem.setTitle("Resource Conflict");
+        problem.setInstance(URI.create(request.getRequestURI()));
+        return problem;
+    }
+
+    @ExceptionHandler({InsufficientBalanceException.class, BusinessRuleException.class, IllegalStateException.class})
+    public ProblemDetail handleBusinessRule(RuntimeException ex, HttpServletRequest request) {
         log.warn("Business rule violation on {}: {}", request.getRequestURI(), ex.getMessage());
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_ENTITY, ex.getMessage());
         problem.setTitle("Business Rule Violation");
