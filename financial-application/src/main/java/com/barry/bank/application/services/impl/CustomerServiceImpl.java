@@ -4,6 +4,8 @@ import com.barry.bank.application.services.CustomerService;
 import com.barry.bank.domain.entities.BankAccount;
 import com.barry.bank.domain.entities.Customer;
 import com.barry.bank.domain.entities.Operation;
+import com.barry.bank.domain.exception.DuplicateResourceException;
+import com.barry.bank.domain.exception.ResourceNotFoundException;
 import com.barry.bank.persistence.repositories.BankAccountRepository;
 import com.barry.bank.persistence.repositories.CustomerRepository;
 import com.barry.bank.persistence.repositories.OperationRepository;
@@ -42,7 +44,7 @@ public class CustomerServiceImpl implements CustomerService {
         }
         if (customerRepository.existsByEmailIgnoreCase(email)) {
             log.warn("Attempted to create customer with an email that already exists. email: {}", email);
-            throw new IllegalArgumentException("Customer with this email already exists");
+            throw new DuplicateResourceException("Customer with this email already exists");
         }
 
         Customer savedCustomer = customerRepository.save(customer);
@@ -70,7 +72,7 @@ public class CustomerServiceImpl implements CustomerService {
         return customerRepository.findById(customerId)
                 .orElseThrow(() -> {
                     log.warn("Attempt to retrieve non-existent customerId: {}", customerId);
-                    return new IllegalArgumentException("Customer not found with ID:" + customerId);
+                    return new ResourceNotFoundException("Customer not found with ID:" + customerId);
                 });
     }
 
@@ -107,7 +109,6 @@ public class CustomerServiceImpl implements CustomerService {
         return customer;
     }
 
-    @Override
     @Transactional
     public void deleteCustomer(UUID customerId) {
         Customer customer = getCustomerById(customerId);

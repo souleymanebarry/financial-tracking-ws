@@ -4,6 +4,7 @@ import com.barry.bank.application.services.OperationService;
 import com.barry.bank.domain.entities.BankAccount;
 import com.barry.bank.domain.entities.Operation;
 import com.barry.bank.domain.entities.enums.OperationType;
+import com.barry.bank.domain.exception.ResourceNotFoundException;
 import com.barry.bank.persistence.repositories.BankAccountRepository;
 import com.barry.bank.persistence.repositories.OperationRepository;
 import lombok.RequiredArgsConstructor;
@@ -41,19 +42,13 @@ public class OperationServiceImpl implements OperationService {
 
         BankAccount account = findAccountById(accountId);
 
-        if (account.getBalance().compareTo(amount) < 0) {
-            log.error("Insufficient balance for debit: balance={}, amount={}", account.getBalance(), amount);
-            throw new IllegalStateException("Insufficient balance for a debit transaction");
-        }
-
         BigDecimal oldBalance = account.getBalance();
-        BigDecimal newBalance = oldBalance.subtract(amount);
-
-        updateAccountBalance(account, newBalance);
+        account.debit(amount);
+        accountRepository.save(account);
         recordOperation(amount, account, DEBIT, description);
 
         log.info("Debit completed: accountId={}, amount={}, oldBalance={}, newBalance={}, rib={}",
-                accountId, amount, oldBalance, newBalance, account.getRib());
+                accountId, amount, oldBalance, account.getBalance(), account.getRib());
     }
 
     @Override
@@ -70,26 +65,20 @@ public class OperationServiceImpl implements OperationService {
 
         BankAccount account = findAccountById(accountId);
         BigDecimal oldBalance = account.getBalance();
-        BigDecimal newBalance = oldBalance.add(amount);
-
-        updateAccountBalance(account, newBalance);
+        account.credit(amount);
+        accountRepository.save(account);
         recordOperation(amount, account, CREDIT, description);
 
         log.info("Credit completed: accountId={}, amount={}, oldBalance={}, newBalance={}, rib={}",
-                accountId, amount, oldBalance, newBalance, account.getRib());
+                accountId, amount, oldBalance, account.getBalance(), account.getRib());
     }
 
     private BankAccount findAccountById(UUID accountId) {
         return accountRepository.findById(accountId)
                 .orElseThrow(() -> {
                     log.warn("Account not found: {}", accountId);
-                    return new IllegalArgumentException("Account not found with Id: " + accountId);
+                    return new ResourceNotFoundException("Account not found with Id: " + accountId);
                 });
-    }
-
-    private void updateAccountBalance(BankAccount account, BigDecimal newBalance) {
-        account.setBalance(newBalance);
-        accountRepository.save(account);
     }
 
     private void recordOperation(BigDecimal amount, BankAccount account, OperationType type, String description) {
