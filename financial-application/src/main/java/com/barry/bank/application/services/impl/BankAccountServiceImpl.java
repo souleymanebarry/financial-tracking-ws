@@ -7,6 +7,8 @@ import com.barry.bank.domain.entities.CurrentAccount;
 import com.barry.bank.domain.entities.Customer;
 import com.barry.bank.domain.entities.Operation;
 import com.barry.bank.domain.entities.SavingAccount;
+import com.barry.bank.domain.exception.BusinessRuleException;
+import com.barry.bank.domain.exception.ResourceNotFoundException;
 import com.barry.bank.persistence.repositories.BankAccountRepository;
 import com.barry.bank.persistence.repositories.CustomerRepository;
 import com.barry.bank.persistence.repositories.OperationRepository;
@@ -47,7 +49,7 @@ public class BankAccountServiceImpl implements BankAccountService {
     public CurrentAccount createCurrentAccount(CurrentAccount account, Customer customer){
         if (account.getOverDraft() == null) {
             log.warn("Attempt to create CurrentAccount without overDraft for CustomerID: {}", customer.getCustomerId());
-            throw new IllegalStateException("CurrentAccount must have an overDraft");
+            throw new BusinessRuleException("CurrentAccount must have an overDraft");
         }
         ensureCustomerExists(customer);
         initializeDefaultValues(account);
@@ -63,7 +65,7 @@ public class BankAccountServiceImpl implements BankAccountService {
     public SavingAccount createSavingAccount(SavingAccount account, Customer customer) {
         if (account.getInterestRate() == null) {
             log.warn("Attempt to create SavingAccount without InterestRate for CustomerID: {}", customer.getCustomerId());
-            throw new IllegalStateException("SavingAccount must have an InterestRate");
+            throw new BusinessRuleException("SavingAccount must have an InterestRate");
         }
         ensureCustomerExists(customer);
         initializeDefaultValues(account);
@@ -126,7 +128,7 @@ public class BankAccountServiceImpl implements BankAccountService {
         return accountRepository.findById(accountId)
                 .orElseThrow(() -> {
                     log.warn("Account not found with ID: {}", accountId);
-                    return new IllegalArgumentException("Account not found with Id: " + accountId);
+                    return new ResourceNotFoundException("Account not found with Id: " + accountId);
                 });
     }
 
@@ -147,7 +149,7 @@ public class BankAccountServiceImpl implements BankAccountService {
     private void ensureAccountsAreDifferent(BankAccount sourceAccount, BankAccount destinationAccount) {
         if (sourceAccount.getAccountId().equals(destinationAccount.getAccountId())) {
             log.error("Transfer to same account: sourceId={}", sourceAccount.getAccountId());
-            throw new IllegalStateException("Source account must be different from destination account");
+            throw new BusinessRuleException("Source account must be different from destination account");
         }
     }
 
@@ -157,7 +159,7 @@ public class BankAccountServiceImpl implements BankAccountService {
         customerRepository.findById(customerID)
                 .orElseThrow(() -> {
                     log.warn("Customer not found with ID: {}", customerID);
-                    return new IllegalArgumentException("Customer not found with ID: " + customerID);
+                    return new ResourceNotFoundException("Customer not found with ID: " + customerID);
                 });
     }
 
