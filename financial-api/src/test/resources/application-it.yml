@@ -22,6 +22,11 @@ spring:
     serialization:
       INDENT_OUTPUT: true
 
+logging:
+  level:
+    org.springframework.boot.autoconfigure.jdbc: DEBUG
+    org.springframework.security: TRACE
+
 archive:
   service:
     url: http://localhost:${wiremock.server.port}
