@@ -1,5 +1,6 @@
 package com.barry.bank.application.services.impl;
 
+import com.barry.bank.application.services.BankAccountService;
 import com.barry.bank.domain.entities.BankAccount;
 import com.barry.bank.domain.entities.CurrentAccount;
 import com.barry.bank.domain.entities.Customer;
@@ -44,7 +45,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertAll;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -62,6 +62,9 @@ class CustomerServiceImplTest {
 
     @Mock
     private OperationRepository operationRepository;
+
+    @Mock
+    private BankAccountService accountService;
 
     @InjectMocks
     private CustomerServiceImpl customerService;
@@ -321,68 +324,15 @@ class CustomerServiceImplTest {
     void shouldDeleteCustomerWithAllRelatedDatWhenCustomerIdIsValid() {
         // Arrange
         UUID customerId = customer.getCustomerId();
-        UUID currentAccountId = UUID.randomUUID();
-        UUID savingAccountId = UUID.randomUUID();
-        UUID operationId1  = UUID.randomUUID();
-        UUID operationId2  = UUID.randomUUID();
-
-        CurrentAccount account1 = CurrentAccount.builder()
-                .accountId(currentAccountId)
-                .rib("FR76 8778 1254 3167 7552 374")
-                .balance(BigDecimal.valueOf(20_000))
-                .createdAt(LocalDateTime.now())
-                .status(CREATED)
-                .overDraft(BigDecimal.valueOf(200))
-                .customer(customer)
-                .build();
-
-        SavingAccount account2 = SavingAccount.builder()
-                .accountId(savingAccountId)
-                .rib("FR76 2222 1254 3167 7552 374")
-                .balance(BigDecimal.valueOf(1_000))
-                .createdAt(LocalDateTime.now())
-                .status(CREATED)
-                .interestRate(BigDecimal.valueOf(1.4))
-                .customer(customer)
-                .build();
-
-        List<BankAccount> accounts = Arrays.asList(account1, account2);
-
-        Operation.builder()
-                .operationId(operationId1)
-                .operationDate(LocalDateTime.now())
-                .operationType(CREDIT)
-                .operationAmount(BigDecimal.valueOf(10_000))
-                .account(account1)
-                .build();
-
-        Operation.builder()
-                .operationId(operationId2)
-                .operationDate(LocalDateTime.now())
-                .operationType(CREDIT)
-                .operationAmount(BigDecimal.valueOf(20_000))
-                .account(account1)
-                .build();
-
         when(customerRepository.findById(customerId)).thenReturn(Optional.of(customer));
-        when(accountRepository.findByCustomer_CustomerId(customerId)).thenReturn(accounts);
-        doNothing().when(operationRepository).deleteAllByAccount_AccountId(currentAccountId);
-        doNothing().when(operationRepository).deleteAllByAccount_AccountId(savingAccountId);
-        doNothing().when(accountRepository).delete(account1);
-        doNothing().when(accountRepository).delete(account2);
-        doNothing().when(customerRepository).delete(customer);
 
         // Act
         customerService.deleteCustomer(customerId);
 
-        // Assert
-        for (BankAccount account : accounts) {
-            verify(operationRepository, times(1)).deleteAllByAccount_AccountId(account.getAccountId());
-            verify(accountRepository, times(1)).delete(account);
-        }
-
-       verify(customerRepository, times(1)).findById(customerId);
-       verify(customerRepository, times(1)).delete(customer);
+        // Assert – deletion of accounts and their operations is delegated to the BankAccount aggregate
+        verify(accountService, times(1)).deleteAccountsByCustomer(customerId);
+        verify(customerRepository, times(1)).findById(customerId);
+        verify(customerRepository, times(1)).delete(customer);
     }
 
     @Test
@@ -434,8 +384,8 @@ class CustomerServiceImplTest {
 
         when(customerRepository.findById(customerId)).thenReturn(Optional.of(customer));
         when(accountRepository.findByCustomer_CustomerId(customerId)).thenReturn(accounts);
-        when(operationRepository.findByAccount_AccountId(currentAccountId)).thenReturn(List.of(operation1));
-        when(operationRepository.findByAccount_AccountId(savingAccountId)).thenReturn(List.of(operation2));
+        when(operationRepository.findByAccount_AccountIdIn(List.of(currentAccountId, savingAccountId)))
+                .thenReturn(List.of(operation1, operation2));
 
         // Act
         Customer result = customerService.getCustomerWithAccountsAndOperations(customerId);
@@ -471,7 +421,6 @@ class CustomerServiceImplTest {
         // Verify
         verify(customerRepository, times(1)).findById(customerId);
         verify(accountRepository, times(1)).findByCustomer_CustomerId(customerId);
-        verify(operationRepository, times(1)).findByAccount_AccountId(currentAccountId);
-        verify(operationRepository, times(1)).findByAccount_AccountId(savingAccountId);
+        verify(operationRepository, times(1)).findByAccount_AccountIdIn(List.of(currentAccountId, savingAccountId));
     }
 }

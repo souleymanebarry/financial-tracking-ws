@@ -660,4 +660,33 @@ class BankAccountServiceImplTest {
         verify(accountRepository, times(1)).findAll();
     }
 
+    //----------------------------------DELETE_ACCOUNTS_BY_CUSTOMER-----------------------------------
+
+    @Test
+    void shouldDeleteAllAccountsAndTheirOperationsForCustomer() {
+        // GIVEN
+        UUID customerId = UUID.randomUUID();
+        UUID accountId1 = UUID.randomUUID();
+        UUID accountId2 = UUID.randomUUID();
+
+        BankAccount account1 = CurrentAccount.builder()
+                .accountId(accountId1)
+                .overDraft(BigDecimal.valueOf(200)).build();
+        BankAccount account2 = SavingAccount.builder()
+                .accountId(accountId2)
+                .interestRate(BigDecimal.valueOf(1.5)).build();
+
+        when(accountRepository.findByCustomer_CustomerId(customerId))
+                .thenReturn(asList(account1, account2));
+
+        // WHEN
+        accountService.deleteAccountsByCustomer(customerId);
+
+        // THEN – each account's operations are deleted, then the account itself
+        verify(operationRepository, times(1)).deleteAllByAccount_AccountId(accountId1);
+        verify(operationRepository, times(1)).deleteAllByAccount_AccountId(accountId2);
+        verify(accountRepository, times(1)).delete(account1);
+        verify(accountRepository, times(1)).delete(account2);
+    }
+
 }
