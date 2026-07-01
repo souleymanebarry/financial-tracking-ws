@@ -50,8 +50,8 @@ public class BankAccountControllerImpl implements BankAccountController {
 
     @Override
     public ResponseEntity<List<AccountDTO>> getAllAccounts() {
-        log.info("GET /api/v1/accounts/withoutPaginations");
-        List<BankAccount> accounts = accountService.getAccountsWithoutPaginations();
+        log.info("GET /api/v1/accounts/all");
+        List<BankAccount> accounts = accountService.getAllAccounts();
         List<AccountDTO> dtos = accounts.stream()
                 .map(accountMapper::accountToAccountDto).toList();
         return ResponseEntity.ok(dtos);
@@ -68,7 +68,7 @@ public class BankAccountControllerImpl implements BankAccountController {
     @Override
     public ResponseEntity<List<AccountDTO>> getAccountsPaginated(int page, int size) {
         log.info("GET /api/v1/accounts?page={}&size={}", page, size);
-        List<BankAccount> paginated = accountService.getAccountsPaginated(page, size);
+        List<BankAccount> paginated = accountService.getAccounts(page, size);
         List<AccountDTO> dtos = paginated.stream().map(accountMapper::accountToAccountDto).toList();
         return ResponseEntity.ok(dtos);
     }
@@ -76,7 +76,7 @@ public class BankAccountControllerImpl implements BankAccountController {
     @Override
     public ResponseEntity<List<OperationDTO>> getAccountOperations(UUID accountId) {
         log.info("GET /api/v1/accounts/{}/operations ", accountId);
-        List<Operation> operations = accountService.getAccountTransactionHistory(accountId);
+        List<Operation> operations = accountService.getAccountOperations(accountId);
         List<OperationDTO> dtos = operations.stream().map(operationMapper::operationToOperationDto).toList();
         return ResponseEntity.ok(dtos);
     }

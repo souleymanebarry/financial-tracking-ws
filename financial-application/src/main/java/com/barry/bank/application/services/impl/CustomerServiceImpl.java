@@ -56,14 +56,14 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
-    public List<Customer> getCustomersPaginated(int page, int size) {
+    public List<Customer> getCustomers(int page, int size) {
         List<Customer> customers = customerRepository.findAll(PageRequest.of(page, size)).getContent();
         log.info("Successfully retrieved {} customers for page: {}, size: {}", customers.size(), page, size);
         return customers;
     }
 
     @Override
-    public List<Customer> getCustomersWithoutPagination() {
+    public List<Customer> getAllCustomers() {
         final List<Customer> customers = customerRepository.findAll();
         log.info("Successfully retrieved: {} customers from database", customers.size());
         return customers;

@@ -458,7 +458,7 @@ class BankAccountServiceImplTest {
         when(accountRepository.findAll(PageRequest.of(page, size))).thenReturn(mockPage);
 
         // Act
-        List<BankAccount> result = accountService.getAccountsPaginated(page, size);
+        List<BankAccount> result = accountService.getAccounts(page, size);
 
         // Assert
         assertThat(result).hasSize(3).contains(account, account2, account3);
@@ -547,7 +547,7 @@ class BankAccountServiceImplTest {
                 () -> assertThat(result).hasSize(3),
                 () -> assertThat(result).containsExactly(operation, operation2, operation3),
                 // ✅ Vérifie que chaque opération appartient bien au même compte
-                () -> assertThat(result.getContent()).allSatisfy(op -> assertThat(op.getAccount().getAccountId()).isEqualTo(accountId)));
+                () -> assertThat(result).allSatisfy(op -> assertThat(op.getAccount().getAccountId()).isEqualTo(accountId)));
 
         verify(operationRepository, times(1))
                 .findByAccount_AccountId(eq(accountId), any(Pageable.class));
@@ -558,7 +558,7 @@ class BankAccountServiceImplTest {
     @Test
     void shouldThrowExceptionWhenAccountIdIsNullOnGetAccountTransactionHistory() {
         // Act  + Assert
-        assertThatThrownBy(() -> accountService.getAccountTransactionHistory(null))
+        assertThatThrownBy(() -> accountService.getAccountOperations(null))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("AccountId must not be null");
 
@@ -572,7 +572,7 @@ class BankAccountServiceImplTest {
         UUID accountId = UUID.randomUUID();
         when(accountRepository.findById(accountId)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> accountService.getAccountTransactionHistory(accountId))
+        assertThatThrownBy(() -> accountService.getAccountOperations(accountId))
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessageContaining("Account not found with Id: "+accountId);
 
@@ -617,7 +617,7 @@ class BankAccountServiceImplTest {
         when(operationRepository.findByAccount_AccountId(eq(accountId), any(Sort.class))).thenReturn(operations);
 
         // Act
-        List<Operation> result = accountService.getAccountTransactionHistory(accountId);
+        List<Operation> result = accountService.getAccountOperations(accountId);
 
         // Assert
         assertAll(
@@ -649,7 +649,7 @@ class BankAccountServiceImplTest {
         when(accountRepository.findAll()).thenReturn(mockAccounts);
 
         // WHEN
-        List<BankAccount> result = accountService.getAccountsWithoutPaginations();
+        List<BankAccount> result = accountService.getAllAccounts();
 
         // THEN
         assertAll(
