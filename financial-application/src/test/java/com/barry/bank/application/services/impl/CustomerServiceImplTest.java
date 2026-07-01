@@ -96,7 +96,7 @@ class CustomerServiceImplTest {
     @ValueSource(strings = {"   "})
     void shouldThrowExceptionWhenCustomerEmailIsNullOrBlankOnCreateCustomer(String email) {
         // Act + Assert
-        Customer customer = Customer.builder()
+        Customer customerWithInvalidEmail = Customer.builder()
                 .customerId(UUID.randomUUID())
                 .firstName("DURANT")
                 .lastName("Alexandre")
@@ -104,7 +104,7 @@ class CustomerServiceImplTest {
                 .gender(MALE)
                 .build();
 
-        assertThatThrownBy(() -> customerService.createCustomer(customer))
+        assertThatThrownBy(() -> customerService.createCustomer(customerWithInvalidEmail))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Customer email must not be null");
         // verify
@@ -163,7 +163,7 @@ class CustomerServiceImplTest {
                 .thenReturn(new PageImpl<>(List.of(customer, customer2, customer3)));
 
         // Act
-        List<Customer> result = customerService.getCustomersPaginated(page, size);
+        List<Customer> result = customerService.getCustomers(page, size);
 
         // Assert
         assertAll(
@@ -179,7 +179,7 @@ class CustomerServiceImplTest {
     void shouldReturnEmptyListWhenNoCustomersFoundOnGetCustomersWithoutPagination() {
         when(customerRepository.findAll()).thenReturn(List.of());
 
-        List<Customer> result = customerService.getCustomersWithoutPagination();
+        List<Customer> result = customerService.getAllCustomers();
 
         assertThat(result).isEmpty();
         verify(customerRepository, times(1)).findAll();
@@ -193,7 +193,7 @@ class CustomerServiceImplTest {
         when(customerRepository.findAll()).thenReturn(List.of(customer, customer2, customer3));
 
         // Act
-        List<Customer> result = customerService.getCustomersWithoutPagination();
+        List<Customer> result = customerService.getAllCustomers();
 
         // Assert
         assertAll(
@@ -223,10 +223,10 @@ class CustomerServiceImplTest {
 
     @ParameterizedTest
     @MethodSource("invalidUpdateCustomerInputs")
-    void shouldThrowExceptionWhenCustomerIdOrCustomerIsNullOnPartiallyUpdateCustomer(UUID customerId, Customer customer) {
+    void shouldThrowExceptionWhenCustomerIdOrCustomerIsNullOnPartiallyUpdateCustomer(UUID customerId, Customer inputCustomer) {
 
         // Act + Assert
-        assertThatThrownBy(() -> customerService.partiallyUpdateCustomer(customerId, customer))
+        assertThatThrownBy(() -> customerService.partiallyUpdateCustomer(customerId, inputCustomer))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Customer ID and customer data must not be null");
 
@@ -237,10 +237,10 @@ class CustomerServiceImplTest {
 
     private static Stream<Arguments> invalidUpdateCustomerInputs() {
 
-        Customer customer = Customer.builder().build();
+        Customer emptyCustomer = Customer.builder().build();
         return Stream.of(
                 Arguments.of(UUID.randomUUID(), null),  // invalid customer
-                Arguments.of(null, customer),   // invalid customerId
+                Arguments.of(null, emptyCustomer),   // invalid customerId
                 Arguments.of(null,null)   // both invalid
         );
     }
@@ -289,13 +289,10 @@ class CustomerServiceImplTest {
 
         // Assert
 
-        assertAll(
-                () -> assertThat(result).isNotNull(),
-                ()-> assertThat( result.getFirstName()).isEqualTo("Lamine"),
-                ()-> assertThat( result.getLastName()).isEqualTo("CAMARA"),
-                ()-> assertThat( result.getEmail()).isEqualTo("alexandre.durant@gmail.com"),
-                ()-> assertThat( result.getGender()).isEqualTo(MALE)
-        );
+        assertThat(result)
+                .isNotNull()
+                .extracting(Customer::getFirstName, Customer::getLastName, Customer::getEmail, Customer::getGender)
+                .containsExactly("Lamine", "CAMARA", "alexandre.durant@gmail.com", MALE);
 
         //verify
         verify(customerRepository, times(1)).findById(customerId);
