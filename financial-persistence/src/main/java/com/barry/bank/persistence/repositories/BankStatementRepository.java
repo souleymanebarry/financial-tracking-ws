@@ -39,8 +39,6 @@ public interface BankStatementRepository extends JpaRepository<BankStatement, UU
             """)
     List<BankStatement> findByStatusWithLines(@Param("status") StatementStatus status);
 
-    boolean existsByAccount_AccountIdAndPeriodStartAndPeriodEnd(
-            UUID accountId, LocalDate periodStart, LocalDate periodEnd);
 
     @Query("SELECT s.account.accountId FROM BankStatement s " +
            "WHERE s.periodStart = :start AND s.periodEnd = :end")
