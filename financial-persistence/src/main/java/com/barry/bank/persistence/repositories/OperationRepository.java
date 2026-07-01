@@ -10,6 +10,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
@@ -23,11 +24,10 @@ public interface OperationRepository extends JpaRepository<Operation, UUID> {
 
     void deleteAllByAccount_AccountId(UUID accountId);
 
+    List<Operation> findByAccount_AccountIdIn(Collection<UUID> accountIds);
+
     List<Operation> findByAccount_AccountIdAndOperationDateBetweenOrderByOperationDateAsc(
             UUID accountId, LocalDateTime from, LocalDateTime to);
-
-    List<Operation> findByAccount_AccountIdAndOperationDateAfter(
-            UUID accountId, LocalDateTime after);
 
     @Query("SELECT COALESCE(SUM(o.operationAmount), 0) FROM Operation o " +
            "WHERE o.account.accountId = :accountId AND o.operationDate > :after")

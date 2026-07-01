@@ -17,8 +17,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @Log4j2
@@ -98,13 +100,19 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
-    public Customer getFullCustomerData(UUID customerId) {
+    @Transactional(readOnly = true)
+    public Customer getCustomerWithAccountsAndOperations(UUID customerId) {
         Customer customer = getCustomerById(customerId);
         List<BankAccount> accounts = accountRepository.findByCustomer_CustomerId(customerId);
-        accounts.forEach(account -> {
-            List<Operation> operations = operationRepository.findByAccount_AccountId(account.getAccountId());
-            account.setOperations(operations);
-        });
+
+        if(!accounts.isEmpty()) {
+            final List<UUID> accountIds = accounts.stream().map(BankAccount::getAccountId).toList();
+            Map<UUID, List<Operation>> operationsByAccount =
+                    operationRepository.findByAccount_AccountIdIn(accountIds).stream()
+                    .collect(Collectors.groupingBy(operation -> operation.getAccount().getAccountId()));
+
+            accounts.forEach(account -> account.setOperations(operationsByAccount.getOrDefault(account.getAccountId(), List.of())));
+        }
         customer.setBankAccounts(accounts);
         return customer;
     }

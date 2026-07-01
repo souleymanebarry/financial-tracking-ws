@@ -54,7 +54,7 @@ public interface CustomerService {
      * @param customerId the ID used to retrieve customer
      * @return the {@link Customer} including all  related accounts and operations
      */
-    Customer getFullCustomerData(UUID customerId);
+    Customer getCustomerWithAccountsAndOperations(UUID customerId);
 
     /**
      * Delete all operations and all accounts of a customer before deleting the customer
