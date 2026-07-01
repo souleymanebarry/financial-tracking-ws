@@ -80,7 +80,8 @@ class OperationServiceImplTest {
         UUID accountId = UUID.randomUUID();
         when(accountRepository.findById(accountId)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> operationService.debitAccount(accountId, BigDecimal.valueOf(200), "desc"))
+        BigDecimal amount = BigDecimal.valueOf(200);
+        assertThatThrownBy(() -> operationService.debitAccount(accountId, amount, "desc"))
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessageContaining("Account not found with Id: " + accountId);
 
@@ -99,7 +100,8 @@ class OperationServiceImplTest {
 
         when(accountRepository.findById(accountId)).thenReturn(Optional.of(account));
 
-        assertThatThrownBy(() -> operationService.debitAccount(accountId, BigDecimal.valueOf(200_000), "desc"))
+        BigDecimal amount = BigDecimal.valueOf(200_000);
+        assertThatThrownBy(() -> operationService.debitAccount(accountId, amount, "desc"))
                 .isInstanceOf(InsufficientBalanceException.class)
                 .hasMessageContaining("Insufficient balance for a debit transaction");
 
@@ -186,7 +188,8 @@ class OperationServiceImplTest {
         UUID accountId = UUID.randomUUID();
         when(accountRepository.findById(accountId)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> operationService.creditAccount(accountId, BigDecimal.valueOf(200), "desc"))
+        BigDecimal amount = BigDecimal.valueOf(200);
+        assertThatThrownBy(() -> operationService.creditAccount(accountId, amount, "desc"))
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessageContaining("Account not found with Id: " + accountId);
 
