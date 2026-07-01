@@ -97,7 +97,7 @@ public class BankAccountServiceImpl implements BankAccountService {
     }
 
     @Override
-    public List<BankAccount> getAccountsPaginated(int page, int size) {
+    public List<BankAccount> getAccounts(int page, int size) {
         List<BankAccount> accounts = accountRepository.findAll(PageRequest.of(page, size)).getContent();
         log.info("Successfully retrieved {} bank accounts for page={}, size={}", accounts.size(), page, size);
         return accounts;
@@ -114,7 +114,7 @@ public class BankAccountServiceImpl implements BankAccountService {
     }
 
     @Override
-    public List<Operation> getAccountTransactionHistory(UUID accountId) {
+    public List<Operation> getAccountOperations(UUID accountId) {
         validateAccountId(accountId);
         getAccountById(accountId);
         List<Operation> operations = operationRepository.findByAccount_AccountId(
@@ -133,7 +133,7 @@ public class BankAccountServiceImpl implements BankAccountService {
     }
 
     @Override
-    public List<BankAccount> getAccountsWithoutPaginations() {
+    public List<BankAccount> getAllAccounts() {
         List<BankAccount> accountList = accountRepository.findAll();
         log.info("Successfully retrieved {} accounts", accountList.size());
         return accountList;

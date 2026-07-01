@@ -29,8 +29,8 @@ public class CustomerControllerImpl implements CustomerController {
 
     @Override
     public ResponseEntity<List<CustomerDTO>> getAllCustomers() {
-        log.info("GET /api/v1/customers/withoutPaginations");
-        List<Customer> customers = customerService.getCustomersWithoutPagination();
+        log.info("GET /api/v1/customers/all");
+        List<Customer> customers = customerService.getAllCustomers();
         List<CustomerDTO> dtos = customers.stream().map(customerMapper::customerToCustomerDto).toList();
         return ResponseEntity.ok(dtos);
     }
@@ -56,7 +56,7 @@ public class CustomerControllerImpl implements CustomerController {
     @Override
     public ResponseEntity<List<CustomerDTO>> getCustomersPaginated(int page, int size) {
         log.info("GET /api/v1/customers?page{}&size={}", page, size);
-        List<Customer> customersPaginated = customerService.getCustomersPaginated(page, size);
+        List<Customer> customersPaginated = customerService.getCustomers(page, size);
         List<CustomerDTO> dtos = customersPaginated.stream().map(customerMapper::customerToCustomerDto).toList();
         return ResponseEntity.ok(dtos);
     }
