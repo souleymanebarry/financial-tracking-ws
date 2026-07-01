@@ -22,14 +22,14 @@ public interface CustomerService {
      * @param size the size number of customer per page
      * @return a list of {@link Customer} objects for the specified page
      */
-    List<Customer> getCustomersPaginated(int page, int size);
+    List<Customer> getCustomers(int page, int size);
 
     /**
      * Retrieve all customers without pagination
      *
      * @return a list of {@link Customer}  objects
      */
-    List<Customer> getCustomersWithoutPagination();
+    List<Customer> getAllCustomers();
 
     /**
      * Retrieves a customer by customerId

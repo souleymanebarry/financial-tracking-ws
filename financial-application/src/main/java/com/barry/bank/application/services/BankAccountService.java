@@ -49,7 +49,14 @@ public interface BankAccountService {
      * @param size size the number of elements per page
      * @return a list of bank account for the requested page
      */
-    List<BankAccount> getAccountsPaginated(int page, int size);
+    List<BankAccount> getAccounts(int page, int size);
+
+    /**
+     *Retrieve all bank accounts without pagination
+     *
+     * @return a list of {@link BankAccount} objects
+     */
+    List<BankAccount> getAllAccounts();
 
     /**
      * Retrieves a paginated list operations for accountId
@@ -67,7 +74,7 @@ public interface BankAccountService {
      * @param accountId the ID of the account whose operations are to be retrieved
      * @return a list of Operations linked to the account
      */
-    List<Operation> getAccountTransactionHistory(UUID accountId);
+    List<Operation> getAccountOperations(UUID accountId);
 
     /**
      * Retrieve account by ID
@@ -76,11 +83,4 @@ public interface BankAccountService {
      * @return the account retrieved
      */
     BankAccount getAccountById(UUID accountId);
-
-    /**
-     *Retrieve all bank accounts without pagination
-     *
-     * @return a list of {@link BankAccount} objects
-     */
-    List<BankAccount> getAccountsWithoutPaginations();
 }
