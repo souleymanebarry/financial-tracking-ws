@@ -17,7 +17,5 @@ public interface BankAccountRepository extends JpaRepository<BankAccount, UUID> 
 
     List<BankAccount> findByCustomer_CustomerId(UUID customerId);
 
-    List<BankAccount> findByStatus(AccountStatus status);
-
     Page<BankAccount> findByStatus(AccountStatus status, Pageable pageable);
 }
