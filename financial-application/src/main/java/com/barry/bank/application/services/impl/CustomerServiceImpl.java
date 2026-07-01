@@ -1,5 +1,6 @@
 package com.barry.bank.application.services.impl;
 
+import com.barry.bank.application.services.BankAccountService;
 import com.barry.bank.application.services.CustomerService;
 import com.barry.bank.domain.entities.BankAccount;
 import com.barry.bank.domain.entities.Customer;
@@ -30,6 +31,7 @@ public class CustomerServiceImpl implements CustomerService {
     private final CustomerRepository customerRepository;
     private final BankAccountRepository accountRepository;
     private final OperationRepository operationRepository;
+    private final BankAccountService accountService;
 
     @Override
     @Transactional
@@ -117,22 +119,13 @@ public class CustomerServiceImpl implements CustomerService {
         return customer;
     }
 
+    @Override
     @Transactional
     public void deleteCustomer(UUID customerId) {
         Customer customer = getCustomerById(customerId);
-
-        List<BankAccount> accounts = getBankAccounts(customerId);
-
-        // supprimer les opérations de chaque compte
-        accounts.forEach(account -> {
-            operationRepository.deleteAllByAccount_AccountId(account.getAccountId());
-            accountRepository.delete(account);
-        });
+        // Deletion of accounts and their operations is owned by the BankAccount aggregate
+        accountService.deleteAccountsByCustomer(customerId);
         customerRepository.delete(customer);
         log.info("Customer and all related data deleted successfully: customerId={}", customerId);
-    }
-
-    private List<BankAccount> getBankAccounts(UUID customerId) {
-        return accountRepository.findByCustomer_CustomerId(customerId);
     }
 }
