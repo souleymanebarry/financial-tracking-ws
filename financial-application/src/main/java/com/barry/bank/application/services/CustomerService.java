@@ -57,7 +57,9 @@ public interface CustomerService {
     Customer getCustomerWithAccountsAndOperations(UUID customerId);
 
     /**
-     * Delete all operations and all accounts of a customer before deleting the customer
+     * Deletes a customer and all related data. The removal of the customer's accounts and
+     * their operations is delegated to {@link BankAccountService#deleteAccountsByCustomer(UUID)},
+     * which owns the {@code BankAccount} aggregate.
      *
      * @param customerId the unique identifier of the customer to delete
      */

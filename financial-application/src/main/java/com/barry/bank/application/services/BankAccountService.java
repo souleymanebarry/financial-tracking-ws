@@ -83,4 +83,11 @@ public interface BankAccountService {
      * @return the account retrieved
      */
     BankAccount getAccountById(UUID accountId);
+
+    /**
+     * Deletes all accounts of a customer along with their operations.
+     *
+     * @param customerId the customer whose accounts (and their operations) will be deleted
+     */
+    void deleteAccountsByCustomer(UUID customerId);
 }
