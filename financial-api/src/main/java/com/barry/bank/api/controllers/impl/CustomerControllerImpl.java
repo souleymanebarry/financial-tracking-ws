@@ -76,7 +76,7 @@ public class CustomerControllerImpl implements CustomerController {
         log.info("DELETE /api/v1/customers/{}", customerId);
 
         // 1 Retrieve the complete customer with their accounts and transactions
-        Customer customer = customerService.getFullCustomerData(customerId);
+        Customer customer = customerService.getCustomerWithAccountsAndOperations(customerId);
 
         // 2 Send the data to be archived to the archiving microservice
         try {

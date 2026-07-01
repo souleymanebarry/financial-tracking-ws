@@ -441,7 +441,7 @@ class CustomerServiceImplTest {
         when(operationRepository.findByAccount_AccountId(savingAccountId)).thenReturn(List.of(operation2));
 
         // Act
-        Customer result = customerService.getFullCustomerData(customerId);
+        Customer result = customerService.getCustomerWithAccountsAndOperations(customerId);
 
         // Assert
         assertThat(result.getCustomerId()).isEqualTo(customerId);
