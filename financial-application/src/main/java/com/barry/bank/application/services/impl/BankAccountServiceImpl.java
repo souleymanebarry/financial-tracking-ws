@@ -139,6 +139,17 @@ public class BankAccountServiceImpl implements BankAccountService {
         return accountList;
     }
 
+    @Override
+    @Transactional
+    public void deleteAccountsByCustomer(UUID customerId) {
+        List<BankAccount> accounts = accountRepository.findByCustomer_CustomerId(customerId);
+        accounts.forEach(account -> {
+            operationRepository.deleteAllByAccount_AccountId(account.getAccountId());
+            accountRepository.delete(account);
+        });
+        log.info("Deleted {} account(s) and their operations for customerId={}", accounts.size(), customerId);
+    }
+
     private void validateAccountId(UUID accountId) {
         if (accountId == null) {
             log.warn("Attempt to use non-existent accountId");
