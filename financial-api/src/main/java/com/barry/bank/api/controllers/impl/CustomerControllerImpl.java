@@ -1,7 +1,7 @@
 package com.barry.bank.api.controllers.impl;
 
-import com.barry.bank.api.archive.sync.service.CustomerArchiveService;
 import com.barry.bank.api.controllers.CustomerController;
+import com.barry.bank.api.customer.service.CustomerDeletionService;
 import com.barry.bank.api.dtos.CustomerDTO;
 import com.barry.bank.api.mappers.CustomerMapper;
 import com.barry.bank.application.services.CustomerService;
@@ -25,7 +25,7 @@ public class CustomerControllerImpl implements CustomerController {
 
     private final CustomerService customerService;
     private final CustomerMapper customerMapper;
-    private final CustomerArchiveService customerArchiveService;
+    private final CustomerDeletionService customerDeletionService;
 
     @Override
     public ResponseEntity<List<CustomerDTO>> getAllCustomers() {
@@ -74,22 +74,7 @@ public class CustomerControllerImpl implements CustomerController {
     @Override
     public ResponseEntity<Void> deleteCustomer(UUID customerId) {
         log.info("DELETE /api/v1/customers/{}", customerId);
-
-        // 1 Retrieve the complete customer with their accounts and transactions
-        Customer customer = customerService.getCustomerWithAccountsAndOperations(customerId);
-
-        // 2 Send the data to be archived to the archiving microservice
-        try {
-            customerArchiveService.archiveCustomer(customer);
-            log.info("Archiving completed for the customer {}", customerId);
-        } catch (Exception e) {
-            log.error("An error occurred during customer archiving {}: {}", customerId, e.getMessage());
-            throw e;
-        }
-
-        // 3 deleted the customer
-        customerService.deleteCustomer(customerId);
-        log.info("Customer {} deleted successfully", customerId);
+        customerDeletionService.archiveAndDeleteCustomer(customerId);
         return ResponseEntity.noContent().build();
     }
 }
