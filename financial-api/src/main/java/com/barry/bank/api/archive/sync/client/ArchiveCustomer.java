@@ -23,7 +23,7 @@ public class ArchiveCustomer {
 
     public void archiveCustomerData(CustomerArchiveDTO dto) {
         String accessToken = jwtService.generateServiceToken(dto.getCustomerId().toString());
-        log.info("JWT generated for customerId= {}", dto.getCustomerId());
+        log.debug("JWT generated for customerId={}", dto.getCustomerId());
 
         restClient.post()
                 .uri(archiveServiceUrl + "/api/v1/archives/customers")

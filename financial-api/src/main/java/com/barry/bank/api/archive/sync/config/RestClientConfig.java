@@ -20,12 +20,12 @@ public class RestClientConfig {
 
                         double sizeKO = jsonBytes.length / 1024.0;
                         double sizeMO = jsonBytes.length / (1024.0 * 1024.0);
-                        log.info("📦 Payload size = {} octets | {} Ko | {} Mo",
+                        log.debug("Payload size = {} octets | {} Ko | {} Mo",
                                 jsonBytes.length,
                                 String.format("%.2f", sizeKO),
                                 String.format("%.4f", sizeMO));
                     } catch (Exception e) {
-                        log.warn("❗ Unable to calculate payload size : {}", e.getMessage());
+                        log.debug("Unable to calculate payload size : {}", e.getMessage());
                     }
                     return execution.execute(request, body);
                 })
