@@ -58,6 +58,7 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<Customer> getCustomers(int page, int size) {
         List<Customer> customers = customerRepository.findAll(PageRequest.of(page, size)).getContent();
         log.info("Successfully retrieved {} customers for page: {}, size: {}", customers.size(), page, size);
@@ -65,6 +66,7 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<Customer> getAllCustomers() {
         final List<Customer> customers = customerRepository.findAll();
         log.info("Successfully retrieved: {} customers from database", customers.size());
@@ -72,6 +74,7 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Customer getCustomerById(UUID customerId) {
         return customerRepository.findById(customerId)
                 .orElseThrow(() -> {

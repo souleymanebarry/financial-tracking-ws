@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -25,6 +26,7 @@ import java.util.UUID;
 
 
 import static com.barry.bank.domain.entities.enums.Gender.FEMALE;
+import static com.barry.bank.domain.entities.enums.Gender.MALE;
 import static com.barry.bank.domain.entities.enums.OperationType.CREDIT;
 import static com.barry.bank.domain.entities.enums.OperationType.DEBIT;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -46,6 +48,11 @@ class OperationRepositoryTest {
     @Autowired
     private CustomerRepository customerRepository;
 
+    @Autowired
+    private TestEntityManager entityManager;
+
+    private Customer customer;
+
     private CurrentAccount account;
 
     @AfterEach
@@ -57,7 +64,7 @@ class OperationRepositoryTest {
 
     @BeforeEach
     void setUp() {
-        Customer customer = Customer.builder()
+        customer = Customer.builder()
                 .firstName("Aisha")
                 .lastName("CAMARA")
                 .email("aisha.camara@gmail.com")
@@ -138,6 +145,67 @@ class OperationRepositoryTest {
         List<Operation> operationsAfter = operationRepository.findByAccount_AccountId(accountId);
         assertThat(operationsAfter).isEmpty();
 
+    }
+
+    @Test
+    void shouldDeleteOnlyOperationsOfGivenCustomerAccounts() {
+        // Arrange : un second client avec son compte et son opération
+        Customer otherCustomer = customerRepository.save(Customer.builder()
+                .firstName("Mohamed")
+                .lastName("SANGARE")
+                .email("mohamed.sangare@gmail.com")
+                .gender(MALE)
+                .build());
+
+        CurrentAccount otherAccount = accountRepository.save(CurrentAccount.builder()
+                .balance(BigDecimal.valueOf(1_000))
+                .overDraft(BigDecimal.valueOf(100))
+                .createdAt(LocalDateTime.now())
+                .rib("FR769876543210")
+                .customer(otherCustomer)
+                .build());
+
+        Operation otherOperation = operationRepository.save(Operation.builder()
+                .operationNumber("OP-003")
+                .operationAmount(BigDecimal.valueOf(5_000))
+                .operationDate(LocalDateTime.now())
+                .operationType(CREDIT)
+                .description("Deposit")
+                .account(otherAccount)
+                .build());
+
+        // Act
+        operationRepository.deleteByCustomerId(customer.getCustomerId());
+        // La suppression bulk contourne le contexte de persistance : on le vide avant de relire
+        entityManager.clear();
+
+        // Assert
+        assertAll(
+                () -> assertThat(operationRepository.findByAccount_AccountId(account.getAccountId())).isEmpty(),
+                () -> assertThat(operationRepository.findAll())
+                        .hasSize(1)
+                        .first()
+                        .extracting(Operation::getOperationId)
+                        .isEqualTo(otherOperation.getOperationId())
+        );
+    }
+
+    @Test
+    void shouldNotDeleteAnythingWhenCustomerHasNoOperation() {
+        // Arrange
+        Customer customerWithoutAccount = customerRepository.save(Customer.builder()
+                .firstName("Mohamed")
+                .lastName("SANGARE")
+                .email("mohamed.sangare@gmail.com")
+                .gender(MALE)
+                .build());
+
+        // Act
+        operationRepository.deleteByCustomerId(customerWithoutAccount.getCustomerId());
+        entityManager.clear();
+
+        // Assert
+        assertThat(operationRepository.findAll()).hasSize(2);
     }
 
 }

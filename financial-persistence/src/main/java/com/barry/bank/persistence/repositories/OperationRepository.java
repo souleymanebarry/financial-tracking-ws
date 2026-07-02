@@ -5,6 +5,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -23,6 +24,14 @@ public interface OperationRepository extends JpaRepository<Operation, UUID> {
     Page<Operation> findByAccount_AccountId(UUID accountId, Pageable pageable);
 
     void deleteAllByAccount_AccountId(UUID accountId);
+
+    /**
+     * Bulk-deletes, in a single query, all operations belonging to the given customer's accounts.
+     */
+    @Modifying
+    @Query("DELETE FROM Operation o WHERE o.account.accountId IN " +
+           "(SELECT a.accountId FROM Account a WHERE a.customer.customerId = :customerId)")
+    void deleteByCustomerId(@Param("customerId") UUID customerId);
 
     List<Operation> findByAccount_AccountIdIn(Collection<UUID> accountIds);
 
