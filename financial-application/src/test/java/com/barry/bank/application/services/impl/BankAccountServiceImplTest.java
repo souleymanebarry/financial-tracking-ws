@@ -19,6 +19,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
@@ -49,6 +50,7 @@ import static org.junit.jupiter.api.Assertions.assertAll;
 
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -99,7 +101,7 @@ class BankAccountServiceImplTest {
                 .hasMessageContaining("CurrentAccount must have an overDraft");
 
         //verify
-        verify(customerRepository, never()).findById(any());
+        verify(customerRepository, never()).existsById(any());
         verify(accountRepository, never()).save(any());
     }
 
@@ -110,7 +112,7 @@ class BankAccountServiceImplTest {
                 .accountId(UUID.randomUUID())
                 .overDraft(BigDecimal.valueOf(150)).build();
 
-        when(customerRepository.findById(customer.getCustomerId())).thenReturn(Optional.empty());
+        when(customerRepository.existsById(customer.getCustomerId())).thenReturn(false);
 
         //Act Assert
         assertThatThrownBy(()-> accountService.createCurrentAccount(account, customer))
@@ -118,7 +120,7 @@ class BankAccountServiceImplTest {
                 .hasMessageContaining("Customer not found with ID: " + customer.getCustomerId());
 
         //verify
-        verify(customerRepository, times(1)).findById(any(UUID.class));
+        verify(customerRepository, times(1)).existsById(any(UUID.class));
         verify(accountRepository, never()).save(any());
     }
 
@@ -133,7 +135,7 @@ class BankAccountServiceImplTest {
                 .status(CREATED)
                 .overDraft(BigDecimal.valueOf(150)).build();
 
-        when(customerRepository.findById(customer.getCustomerId())).thenReturn(Optional.of(customer));
+        when(customerRepository.existsById(customer.getCustomerId())).thenReturn(true);
         when(accountRepository.save(any(CurrentAccount.class))).thenReturn(account);
 
         //Act
@@ -150,7 +152,7 @@ class BankAccountServiceImplTest {
         );
 
         //verify
-        verify(customerRepository, times(1)).findById(any(UUID.class));
+        verify(customerRepository, times(1)).existsById(any(UUID.class));
         verify(accountRepository).save(account);
     }
 
@@ -164,7 +166,7 @@ class BankAccountServiceImplTest {
                 .status(CREATED)
                 .overDraft(BigDecimal.valueOf(200)).build();
 
-        when(customerRepository.findById(customer.getCustomerId())).thenReturn(Optional.of(customer));
+        when(customerRepository.existsById(customer.getCustomerId())).thenReturn(true);
         when(accountRepository.save(any(CurrentAccount.class))).thenReturn(account);
 
         //Act
@@ -181,7 +183,7 @@ class BankAccountServiceImplTest {
         );
 
         //verify
-        verify(customerRepository, times(1)).findById(any(UUID.class));
+        verify(customerRepository, times(1)).existsById(any(UUID.class));
         verify(accountRepository,times(1)).save(account);
     }
 
@@ -200,7 +202,7 @@ class BankAccountServiceImplTest {
                 .hasMessageContaining("SavingAccount must have an InterestRate");
 
         //verify
-        verify(customerRepository, never()).findById(any());
+        verify(customerRepository, never()).existsById(any());
         verify(accountRepository, never()).save(any());
     }
 
@@ -211,7 +213,7 @@ class BankAccountServiceImplTest {
                 .accountId(UUID.randomUUID())
                 .interestRate(BigDecimal.valueOf(2.7)).build();
 
-        when(customerRepository.findById(customer.getCustomerId())).thenReturn(Optional.empty());
+        when(customerRepository.existsById(customer.getCustomerId())).thenReturn(false);
 
         //Act Assert
         assertThatThrownBy(()-> accountService.createSavingAccount(account, customer))
@@ -219,7 +221,7 @@ class BankAccountServiceImplTest {
                 .hasMessageContaining("Customer not found with ID: " + customer.getCustomerId());
 
         //verify
-        verify(customerRepository, times(1)).findById(any(UUID.class));
+        verify(customerRepository, times(1)).existsById(any(UUID.class));
         verify(accountRepository, never()).save(any());
     }
 
@@ -234,7 +236,7 @@ class BankAccountServiceImplTest {
                 .status(CREATED)
                 .interestRate(BigDecimal.valueOf(2.5)).build();
 
-        when(customerRepository.findById(customer.getCustomerId())).thenReturn(Optional.of(customer));
+        when(customerRepository.existsById(customer.getCustomerId())).thenReturn(true);
         when(accountRepository.save(any(SavingAccount.class))).thenReturn(account);
 
         //Act
@@ -251,7 +253,7 @@ class BankAccountServiceImplTest {
         );
 
         //verify
-        verify(customerRepository, times(1)).findById(any(UUID.class));
+        verify(customerRepository, times(1)).existsById(any(UUID.class));
         verify(accountRepository).save(account);
     }
 
@@ -266,7 +268,7 @@ class BankAccountServiceImplTest {
                 .status(CREATED)
                 .interestRate(BigDecimal.valueOf(1.6)).build();
 
-        when(customerRepository.findById(customer.getCustomerId())).thenReturn(Optional.of(customer));
+        when(customerRepository.existsById(customer.getCustomerId())).thenReturn(true);
         when(accountRepository.save(any(SavingAccount.class))).thenReturn(account);
 
         //Act
@@ -283,7 +285,7 @@ class BankAccountServiceImplTest {
         );
 
         //verify
-        verify(customerRepository, times(1)).findById(any(UUID.class));
+        verify(customerRepository, times(1)).existsById(any(UUID.class));
         verify(accountRepository,times(1)).save(account);
     }
 
@@ -666,27 +668,14 @@ class BankAccountServiceImplTest {
     void shouldDeleteAllAccountsAndTheirOperationsForCustomer() {
         // GIVEN
         UUID customerId = UUID.randomUUID();
-        UUID accountId1 = UUID.randomUUID();
-        UUID accountId2 = UUID.randomUUID();
-
-        BankAccount account1 = CurrentAccount.builder()
-                .accountId(accountId1)
-                .overDraft(BigDecimal.valueOf(200)).build();
-        BankAccount account2 = SavingAccount.builder()
-                .accountId(accountId2)
-                .interestRate(BigDecimal.valueOf(1.5)).build();
-
-        when(accountRepository.findByCustomer_CustomerId(customerId))
-                .thenReturn(asList(account1, account2));
 
         // WHEN
         accountService.deleteAccountsByCustomer(customerId);
 
-        // THEN – each account's operations are deleted, then the account itself
-        verify(operationRepository, times(1)).deleteAllByAccount_AccountId(accountId1);
-        verify(operationRepository, times(1)).deleteAllByAccount_AccountId(accountId2);
-        verify(accountRepository, times(1)).delete(account1);
-        verify(accountRepository, times(1)).delete(account2);
+        // THEN – operations are bulk-deleted first, then accounts (FK-safe order), in constant queries
+        InOrder inOrder = inOrder(operationRepository, accountRepository);
+        inOrder.verify(operationRepository, times(1)).deleteByCustomerId(customerId);
+        inOrder.verify(accountRepository, times(1)).deleteByCustomerId(customerId);
     }
 
 }

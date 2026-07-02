@@ -142,12 +142,10 @@ public class BankAccountServiceImpl implements BankAccountService {
     @Override
     @Transactional
     public void deleteAccountsByCustomer(UUID customerId) {
-        List<BankAccount> accounts = accountRepository.findByCustomer_CustomerId(customerId);
-        accounts.forEach(account -> {
-            operationRepository.deleteAllByAccount_AccountId(account.getAccountId());
-            accountRepository.delete(account);
-        });
-        log.info("Deleted {} account(s) and their operations for customerId={}", accounts.size(), customerId);
+        // Bulk delete in FK-safe order: operations first, then accounts (2 constant queries, no N+1).
+        operationRepository.deleteByCustomerId(customerId);
+        accountRepository.deleteByCustomerId(customerId);
+        log.info("Deleted accounts and their operations for customerId={}", customerId);
     }
 
     private void validateAccountId(UUID accountId) {
@@ -164,14 +162,12 @@ public class BankAccountServiceImpl implements BankAccountService {
         }
     }
 
-    @SuppressWarnings("java:S2201")
     private void ensureCustomerExists(Customer customer) {
-        final UUID customerID = customer.getCustomerId();
-        customerRepository.findById(customerID)
-                .orElseThrow(() -> {
-                    log.warn("Customer not found with ID: {}", customerID);
-                    return new ResourceNotFoundException("Customer not found with ID: " + customerID);
-                });
+        final UUID customerId = customer.getCustomerId();
+        if (!customerRepository.existsById(customerId)) {
+            log.error("Customer not found with ID: {}", customerId);
+            throw new ResourceNotFoundException("Customer not found with ID: " + customerId);
+        }
     }
 
     private void attachAccountToCustomer(BankAccount account, Customer customer) {
