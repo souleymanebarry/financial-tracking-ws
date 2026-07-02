@@ -36,49 +36,39 @@ public class OperationServiceImpl implements OperationService {
     @Transactional
     public void debitAccount(UUID accountId, BigDecimal amount, String description) {
         if (accountId == null || amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
-            log.warn("Invalid debit attempt: accountId={}, amount={}", accountId, amount);
             throw new IllegalArgumentException("AccountId must not be null and amount must be greater than zero");
         }
 
         BankAccount account = findAccountById(accountId);
 
-        BigDecimal oldBalance = account.getBalance();
         account.debit(amount);
         accountRepository.save(account);
         recordOperation(amount, account, DEBIT, description);
 
-        log.info("Debit completed: accountId={}, amount={}, oldBalance={}, newBalance={}, rib={}",
-                accountId, amount, oldBalance, account.getBalance(), account.getRib());
+        log.info("Debit completed: accountId={}, amount={}", accountId, amount);
     }
 
     @Override
     @Transactional
     public void creditAccount(UUID accountId, BigDecimal amount, String description) {
         if (accountId == null || amount == null) {
-            log.warn("Null accountId or amount for credit: accountId={}, amount={}", accountId, amount);
             throw new IllegalArgumentException("AccountId or amount must not be null");
         }
         if (amount.compareTo(BigDecimal.ZERO) <= 0) {
-            log.error("Credit amount must be greater than zero: accountId={}, amount={}", accountId, amount);
             throw new IllegalArgumentException("Credit amount must be greater than zero");
         }
 
         BankAccount account = findAccountById(accountId);
-        BigDecimal oldBalance = account.getBalance();
         account.credit(amount);
         accountRepository.save(account);
         recordOperation(amount, account, CREDIT, description);
 
-        log.info("Credit completed: accountId={}, amount={}, oldBalance={}, newBalance={}, rib={}",
-                accountId, amount, oldBalance, account.getBalance(), account.getRib());
+        log.info("Credit completed: accountId={}, amount={}", accountId, amount);
     }
 
     private BankAccount findAccountById(UUID accountId) {
         return accountRepository.findById(accountId)
-                .orElseThrow(() -> {
-                    log.warn("Account not found: {}", accountId);
-                    return new ResourceNotFoundException("Account not found with Id: " + accountId);
-                });
+                .orElseThrow(() -> new ResourceNotFoundException("Account not found with Id: " + accountId));
     }
 
     private void recordOperation(BigDecimal amount, BankAccount account, OperationType type, String description) {

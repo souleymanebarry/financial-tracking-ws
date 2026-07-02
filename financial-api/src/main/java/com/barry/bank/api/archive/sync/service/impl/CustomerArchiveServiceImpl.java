@@ -27,12 +27,11 @@ public class CustomerArchiveServiceImpl implements CustomerArchiveService {
 
     public void archiveCustomer(Customer customer) {
         if (customer == null) {
-            log.warn("Attempt to archive a null customer");
             throw new IllegalArgumentException("Customer cannot be null");
         }
 
         CustomerArchiveDTO archiveDTO = buildCustomerArchiveDTO(customer);
-        log.info("Sending the archive data of customer : {}", customer.getCustomerId());
+        log.info("Sending archive data for customerId={}", customer.getCustomerId());
         archiveCustomer.archiveCustomerData(archiveDTO);
     }
 

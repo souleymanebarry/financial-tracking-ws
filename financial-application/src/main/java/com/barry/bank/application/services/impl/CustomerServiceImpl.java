@@ -37,23 +37,19 @@ public class CustomerServiceImpl implements CustomerService {
     @Transactional
     public Customer createCustomer(Customer customer) {
         if (customer == null) {
-            log.warn("Attempted to create a null customer");
             throw new IllegalArgumentException("Customer must not be null");
         }
 
         final String email = customer.getEmail();
         if (StringUtils.isBlank(email)) {
-            log.warn("Attempted to create customer with a null email. email: {}",  email);
             throw new IllegalArgumentException("Customer email must not be null");
         }
         if (customerRepository.existsByEmailIgnoreCase(email)) {
-            log.warn("Attempted to create customer with an email that already exists. email: {}", email);
             throw new DuplicateResourceException("Customer with this email already exists");
         }
 
         Customer savedCustomer = customerRepository.save(customer);
-        log.info("Customer saved successfully. customerId: {}, email: {}",
-                savedCustomer.getCustomerId(), savedCustomer.getEmail());
+        log.info("Customer created: customerId={}", savedCustomer.getCustomerId());
         return savedCustomer;
     }
 
@@ -61,7 +57,7 @@ public class CustomerServiceImpl implements CustomerService {
     @Transactional(readOnly = true)
     public List<Customer> getCustomers(int page, int size) {
         List<Customer> customers = customerRepository.findAll(PageRequest.of(page, size)).getContent();
-        log.info("Successfully retrieved {} customers for page: {}, size: {}", customers.size(), page, size);
+        log.debug("Retrieved {} customers for page: {}, size: {}", customers.size(), page, size);
         return customers;
     }
 
@@ -69,18 +65,14 @@ public class CustomerServiceImpl implements CustomerService {
     @Transactional(readOnly = true)
     public List<Customer> getAllCustomers() {
         final List<Customer> customers = customerRepository.findAll();
-        log.info("Successfully retrieved: {} customers from database", customers.size());
+        log.debug("Retrieved {} customers from database", customers.size());
         return customers;
     }
 
     @Override
     @Transactional(readOnly = true)
     public Customer getCustomerById(UUID customerId) {
-        return customerRepository.findById(customerId)
-                .orElseThrow(() -> {
-                    log.warn("Attempt to retrieve non-existent customerId: {}", customerId);
-                    return new ResourceNotFoundException("Customer not found with ID:" + customerId);
-                });
+        return findCustomerOrThrow(customerId);
     }
 
 
@@ -88,11 +80,10 @@ public class CustomerServiceImpl implements CustomerService {
     @Transactional
     public Customer partiallyUpdateCustomer(UUID customerId, Customer customer) {
         if (customer == null || customerId == null) {
-            log.warn("Attempt to update customer with null value. customerId: {}, customer: {}", customerId, customer);
             throw new IllegalArgumentException("Customer ID and customer data must not be null");
         }
 
-        Customer existingCustomer = getCustomerById(customerId);
+        Customer existingCustomer = findCustomerOrThrow(customerId);
         // update only non-null fields
         Optional.ofNullable(customer.getFirstName()).ifPresent(existingCustomer::setFirstName);
         Optional.ofNullable(customer.getLastName()).ifPresent(existingCustomer:: setLastName);
@@ -100,14 +91,14 @@ public class CustomerServiceImpl implements CustomerService {
         Optional.ofNullable(customer.getEmail()).ifPresent(existingCustomer:: setEmail);
 
         Customer savedCustomer = customerRepository.save(existingCustomer);
-        log.info("Partially updating customer with. customerId: {}", customerId);
+        log.info("Customer partially updated: customerId={}", customerId);
         return savedCustomer;
     }
 
     @Override
     @Transactional(readOnly = true)
     public Customer getCustomerWithAccountsAndOperations(UUID customerId) {
-        Customer customer = getCustomerById(customerId);
+        Customer customer = findCustomerOrThrow(customerId);
         List<BankAccount> accounts = accountRepository.findByCustomer_CustomerId(customerId);
 
         if(!accounts.isEmpty()) {
@@ -125,10 +116,15 @@ public class CustomerServiceImpl implements CustomerService {
     @Override
     @Transactional
     public void deleteCustomer(UUID customerId) {
-        Customer customer = getCustomerById(customerId);
+        Customer customer = findCustomerOrThrow(customerId);
         // Deletion of accounts and their operations is owned by the BankAccount aggregate
         accountService.deleteAccountsByCustomer(customerId);
         customerRepository.delete(customer);
         log.info("Customer and all related data deleted successfully: customerId={}", customerId);
+    }
+
+    private Customer findCustomerOrThrow(UUID customerId) {
+        return customerRepository.findById(customerId)
+                .orElseThrow(() -> new ResourceNotFoundException("Customer not found with ID:" + customerId));
     }
 }

@@ -50,7 +50,7 @@ public class BankAccountControllerImpl implements BankAccountController {
 
     @Override
     public ResponseEntity<List<AccountDTO>> getAllAccounts() {
-        log.info("GET /api/v1/accounts/all");
+        log.debug("GET /api/v1/accounts/all");
         List<BankAccount> accounts = accountService.getAllAccounts();
         List<AccountDTO> dtos = accounts.stream()
                 .map(accountMapper::accountToAccountDto).toList();
@@ -59,7 +59,7 @@ public class BankAccountControllerImpl implements BankAccountController {
 
     @Override
     public ResponseEntity<AccountDTO> getAccountById(UUID accountId) {
-        log.info("GET /api/v1/accounts/{} ", accountId);
+        log.debug("GET /api/v1/accounts/{}", accountId);
         BankAccount account = accountService.getAccountById(accountId);
         AccountDTO fetchedAccount = accountMapper.accountToAccountDto(account);
         return ResponseEntity.ok(fetchedAccount);
@@ -67,7 +67,7 @@ public class BankAccountControllerImpl implements BankAccountController {
 
     @Override
     public ResponseEntity<List<AccountDTO>> getAccountsPaginated(int page, int size) {
-        log.info("GET /api/v1/accounts?page={}&size={}", page, size);
+        log.debug("GET /api/v1/accounts?page={}&size={}", page, size);
         List<BankAccount> paginated = accountService.getAccounts(page, size);
         List<AccountDTO> dtos = paginated.stream().map(accountMapper::accountToAccountDto).toList();
         return ResponseEntity.ok(dtos);
@@ -75,7 +75,7 @@ public class BankAccountControllerImpl implements BankAccountController {
 
     @Override
     public ResponseEntity<List<OperationDTO>> getAccountOperations(UUID accountId) {
-        log.info("GET /api/v1/accounts/{}/operations ", accountId);
+        log.debug("GET /api/v1/accounts/{}/operations", accountId);
         List<Operation> operations = accountService.getAccountOperations(accountId);
         List<OperationDTO> dtos = operations.stream().map(operationMapper::operationToOperationDto).toList();
         return ResponseEntity.ok(dtos);
@@ -83,7 +83,7 @@ public class BankAccountControllerImpl implements BankAccountController {
 
     @Override
     public ResponseEntity<AccountHistoryDTO> getAccountHistory(UUID accountId, int page, int size) {
-        log.info("GET /api/v1/accounts/{}/history?page={}&size={}", accountId, page, size);
+        log.debug("GET /api/v1/accounts/{}/history?page={}&size={}", accountId, page, size);
 
         //Récupération du compte
         BankAccount account = accountService.getAccountById(accountId);
