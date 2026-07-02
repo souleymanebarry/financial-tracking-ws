@@ -29,7 +29,7 @@ public class CustomerControllerImpl implements CustomerController {
 
     @Override
     public ResponseEntity<List<CustomerDTO>> getAllCustomers() {
-        log.info("GET /api/v1/customers/all");
+        log.debug("GET /api/v1/customers/all");
         List<Customer> customers = customerService.getAllCustomers();
         List<CustomerDTO> dtos = customers.stream().map(customerMapper::customerToCustomerDto).toList();
         return ResponseEntity.ok(dtos);
@@ -37,7 +37,7 @@ public class CustomerControllerImpl implements CustomerController {
 
     @Override
     public ResponseEntity<CustomerDTO> getCustomerById(UUID customerId) {
-        log.info("GET api/v1/customers/{}: ", customerId);
+        log.debug("GET /api/v1/customers/{}", customerId);
         Customer customer = customerService.getCustomerById(customerId);
         CustomerDTO customerDTO = customerMapper.customerToCustomerDto(customer);
         return ResponseEntity.ok(customerDTO);
@@ -45,7 +45,7 @@ public class CustomerControllerImpl implements CustomerController {
 
     @Override
     public ResponseEntity<CustomerDTO> createCustomer(CustomerDTO customerDTO) {
-        log.info("POST /api/v1/customers -> {}", customerDTO);
+        log.info("POST /api/v1/customers");
         Customer customer = customerMapper.customerDtoToCustomer(customerDTO);
         Customer savedCustomer = customerService.createCustomer(customer);
         CustomerDTO savedDTO = customerMapper.customerToCustomerDto(savedCustomer);
@@ -55,7 +55,7 @@ public class CustomerControllerImpl implements CustomerController {
 
     @Override
     public ResponseEntity<List<CustomerDTO>> getCustomersPaginated(int page, int size) {
-        log.info("GET /api/v1/customers?page{}&size={}", page, size);
+        log.debug("GET /api/v1/customers?page={}&size={}", page, size);
         List<Customer> customersPaginated = customerService.getCustomers(page, size);
         List<CustomerDTO> dtos = customersPaginated.stream().map(customerMapper::customerToCustomerDto).toList();
         return ResponseEntity.ok(dtos);

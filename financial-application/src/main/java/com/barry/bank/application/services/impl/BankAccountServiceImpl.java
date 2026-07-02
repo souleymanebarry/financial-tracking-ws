@@ -48,15 +48,14 @@ public class BankAccountServiceImpl implements BankAccountService {
     @Transactional
     public CurrentAccount createCurrentAccount(CurrentAccount account, Customer customer){
         if (account.getOverDraft() == null) {
-            log.warn("Attempt to create CurrentAccount without overDraft for CustomerID: {}", customer.getCustomerId());
             throw new BusinessRuleException("CurrentAccount must have an overDraft");
         }
         ensureCustomerExists(customer);
         initializeDefaultValues(account);
         attachAccountToCustomer(account, customer);
         CurrentAccount savedAccount = accountRepository.save(account);
-        log.info("CurrentAccount saved successfully with ID: {}, accountHolderName: {}, rib: {}",
-                savedAccount.getAccountId(), savedAccount.getCustomer().getLastName(), account.getRib());
+        log.info("CurrentAccount created: accountId={}, customerId={}",
+                savedAccount.getAccountId(), customer.getCustomerId());
         return savedAccount;
     }
 
@@ -64,15 +63,14 @@ public class BankAccountServiceImpl implements BankAccountService {
     @Transactional
     public SavingAccount createSavingAccount(SavingAccount account, Customer customer) {
         if (account.getInterestRate() == null) {
-            log.warn("Attempt to create SavingAccount without InterestRate for CustomerID: {}", customer.getCustomerId());
             throw new BusinessRuleException("SavingAccount must have an InterestRate");
         }
         ensureCustomerExists(customer);
         initializeDefaultValues(account);
         attachAccountToCustomer(account, customer);
         SavingAccount savedAccount = accountRepository.save(account);
-        log.info("SavingAccount saved successfully with ID: {}, accountHolderName: {}, rib: {}",
-                savedAccount.getAccountId(), savedAccount.getCustomer().getLastName(), account.getRib());
+        log.info("SavingAccount created: accountId={}, customerId={}",
+                savedAccount.getAccountId(), customer.getCustomerId());
         return savedAccount;
     }
 
@@ -81,8 +79,6 @@ public class BankAccountServiceImpl implements BankAccountService {
     public void transferBetweenAccounts(UUID sourceAccountId, UUID destinationAccountId, BigDecimal amount) {
         if (sourceAccountId == null || destinationAccountId == null || amount == null ||
                 amount.compareTo(BigDecimal.ZERO) <= 0) {
-            log.warn("Invalid transfer attempt: sourceAccountId={}, destinationAccountId={}, amount={}",
-                    sourceAccountId, destinationAccountId, amount);
             throw new IllegalArgumentException("Transfer amount must be greater than zero and account IDs must not be null");
         }
         BankAccount sourceAccount = getAccountById(sourceAccountId);
@@ -99,7 +95,7 @@ public class BankAccountServiceImpl implements BankAccountService {
     @Override
     public List<BankAccount> getAccounts(int page, int size) {
         List<BankAccount> accounts = accountRepository.findAll(PageRequest.of(page, size)).getContent();
-        log.info("Successfully retrieved {} bank accounts for page={}, size={}", accounts.size(), page, size);
+        log.debug("Retrieved {} bank accounts for page={}, size={}", accounts.size(), page, size);
         return accounts;
     }
 
@@ -109,7 +105,7 @@ public class BankAccountServiceImpl implements BankAccountService {
         getAccountById(accountId);
         Page<Operation> operations = operationRepository
                 .findByAccount_AccountId(accountId, PageRequest.of(page, size, Sort.by("operationDate").descending()));
-        log.info("Successfully retrieved operations for accountId={}, page={}, size={}", accountId, page, size);
+        log.debug("Retrieved operations for accountId={}, page={}, size={}", accountId, page, size);
         return operations;
     }
 
@@ -119,23 +115,20 @@ public class BankAccountServiceImpl implements BankAccountService {
         getAccountById(accountId);
         List<Operation> operations = operationRepository.findByAccount_AccountId(
                 accountId, Sort.by(Sort.Direction.DESC, "operationDate"));
-        log.info("Successfully retrieved {} operations for accountId={}", operations.size(), accountId);
+        log.debug("Retrieved {} operations for accountId={}", operations.size(), accountId);
         return operations;
     }
 
     @Override
     public BankAccount getAccountById(UUID accountId) {
         return accountRepository.findById(accountId)
-                .orElseThrow(() -> {
-                    log.warn("Account not found with ID: {}", accountId);
-                    return new ResourceNotFoundException("Account not found with Id: " + accountId);
-                });
+                .orElseThrow(() -> new ResourceNotFoundException("Account not found with Id: " + accountId));
     }
 
     @Override
     public List<BankAccount> getAllAccounts() {
         List<BankAccount> accountList = accountRepository.findAll();
-        log.info("Successfully retrieved {} accounts", accountList.size());
+        log.debug("Retrieved {} accounts", accountList.size());
         return accountList;
     }
 
@@ -150,14 +143,12 @@ public class BankAccountServiceImpl implements BankAccountService {
 
     private void validateAccountId(UUID accountId) {
         if (accountId == null) {
-            log.warn("Attempt to use non-existent accountId");
             throw new IllegalArgumentException("AccountId must not be null");
         }
     }
 
     private void ensureAccountsAreDifferent(BankAccount sourceAccount, BankAccount destinationAccount) {
         if (sourceAccount.getAccountId().equals(destinationAccount.getAccountId())) {
-            log.error("Transfer to same account: sourceId={}", sourceAccount.getAccountId());
             throw new BusinessRuleException("Source account must be different from destination account");
         }
     }
@@ -165,7 +156,6 @@ public class BankAccountServiceImpl implements BankAccountService {
     private void ensureCustomerExists(Customer customer) {
         final UUID customerId = customer.getCustomerId();
         if (!customerRepository.existsById(customerId)) {
-            log.error("Customer not found with ID: {}", customerId);
             throw new ResourceNotFoundException("Customer not found with ID: " + customerId);
         }
     }
