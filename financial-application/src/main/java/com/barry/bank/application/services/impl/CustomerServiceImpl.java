@@ -37,17 +37,14 @@ public class CustomerServiceImpl implements CustomerService {
     @Transactional
     public Customer createCustomer(Customer customer) {
         if (customer == null) {
-            log.warn("Attempted to create a null customer");
             throw new IllegalArgumentException("Customer must not be null");
         }
 
         final String email = customer.getEmail();
         if (StringUtils.isBlank(email)) {
-            log.warn("Attempted to create customer with a null email. email: {}",  email);
             throw new IllegalArgumentException("Customer email must not be null");
         }
         if (customerRepository.existsByEmailIgnoreCase(email)) {
-            log.warn("Attempted to create customer with an email that already exists. email: {}", email);
             throw new DuplicateResourceException("Customer with this email already exists");
         }
 
