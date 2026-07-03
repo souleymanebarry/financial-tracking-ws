@@ -12,6 +12,8 @@
     </parent>
 
     <artifactId>financial-test-support</artifactId>
+    <!-- Agrégateur de dépendances de test (aucune source) : packaging pom, pas de JAR produit -->
+    <packaging>pom</packaging>
 
     <dependencies>
 
