@@ -60,7 +60,8 @@ class BankAccountControllerIT {
                 .andExpect(jsonPath("$[0].rib").value("FR761234567890"))
                 .andExpect(jsonPath("$[1].rib").value("FR769876543210"))
                 .andExpect(jsonPath("$[2].rib").value("FR761112223334"))
-                .andExpect(jsonPath("$.length()").value(3));
+                .andExpect(jsonPath("$[3].rib").value("FR761112223335"))
+                .andExpect(jsonPath("$.length()").value(4));
 
     }
 
@@ -121,6 +122,8 @@ class BankAccountControllerIT {
     @Test
     @SneakyThrows
     void shouldGetAccountHistoryWithPagination() {
+      // Les 20 opérations du compte ont la même operationDate : le contenu exact de la page
+      // n'est pas déterministe, on vérifie donc la structure et les métadonnées de pagination.
       mockMvc.perform(get("/api/v1/accounts/{accountId}/history","cccc3333-0000-4000-b333-000000000003")
                         .accept(MediaType.APPLICATION_JSON)
                         .param("page", "0")
@@ -130,14 +133,13 @@ class BankAccountControllerIT {
                 .andExpect(jsonPath("$.accountHolderName").value("Durant"))
                 .andExpect(jsonPath("$.balance").value(3200.00))
                 .andExpect(jsonPath("$.operations").isArray())
-                .andExpect(jsonPath("$.operations[0].operationId").value("33333333-0000-4000-b333-000000000003"))
-                .andExpect(jsonPath("$.operations[0].operationAmount").value(150.00))
-                .andExpect(jsonPath("$.operations[0].operationType").value("DEBIT"))
-                .andExpect(jsonPath("$.operations[0].operationNumber").value("OP-20231010-000003"))
-                .andExpect(jsonPath("$.operations[1].operationId").value("44444444-0000-4000-b444-000000000004"))
-                .andExpect(jsonPath("$.operations[1].operationAmount").value( 1200.00))
-                .andExpect(jsonPath("$.operations[1].operationType").value("CREDIT"))
-                .andExpect(jsonPath("$.operations[1].description").value("Project freelance payment"));
+                .andExpect(jsonPath("$.operations.length()").value(2))
+                .andExpect(jsonPath("$.operations[0].operationId").exists())
+                .andExpect(jsonPath("$.operations[1].operationId").exists())
+                .andExpect(jsonPath("$.currentPage").value(0))
+                .andExpect(jsonPath("$.pageSize").value(2))
+                .andExpect(jsonPath("$.totalElements").value(20))
+                .andExpect(jsonPath("$.totalPages").value(10));
     }
 
     @Test
@@ -209,6 +211,9 @@ class BankAccountControllerIT {
     @Test
     @SneakyThrows
     void shouldTransferAmountBetweenAccountsAndPersistOperation() {
+        Integer debitOpsBefore = countOperations("cccc3333-0000-4000-b333-000000000003", "DEBIT");
+        Integer creditOpsBefore = countOperations("bbbb2222-0000-4000-b222-000000000002", "CREDIT");
+
         String jsonBody = """
                 {
                   "sourceAccountId": "cccc3333-0000-4000-b333-000000000003",
@@ -236,19 +241,20 @@ class BankAccountControllerIT {
         );
 
 
-        // check record operations
-        Integer debitOps = jdbcTemplate.queryForObject(
-                "SELECT COUNT(*) FROM operation WHERE account_id = 'cccc3333-0000-4000-b333-000000000003' AND operation_type = 'DEBIT'",
-                Integer.class);
-
-        Integer creditOps = jdbcTemplate.queryForObject(
-                "SELECT COUNT(*) FROM operation WHERE account_id = 'bbbb2222-0000-4000-b222-000000000002' AND operation_type = 'CREDIT'",
-                Integer.class);
+        // check record operations : un DEBIT et un CREDIT de plus qu'avant le virement
+        Integer debitOpsAfter = countOperations("cccc3333-0000-4000-b333-000000000003", "DEBIT");
+        Integer creditOpsAfter = countOperations("bbbb2222-0000-4000-b222-000000000002", "CREDIT");
 
         assertAll(
-                () -> assertThat(debitOps).isEqualTo(2),
-                () -> assertThat(creditOps).isEqualTo(1)
+                () -> assertThat(debitOpsAfter).isEqualTo(debitOpsBefore + 1),
+                () -> assertThat(creditOpsAfter).isEqualTo(creditOpsBefore + 1)
         );
+    }
+
+    private Integer countOperations(String accountId, String operationType) {
+        return jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM operation WHERE account_id = ? AND operation_type = ?",
+                Integer.class, UUID.fromString(accountId), operationType);
     }
 
     @Test
