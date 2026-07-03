@@ -2,9 +2,9 @@ package com.barry.bank.application.services.impl;
 
 import com.barry.bank.application.services.BankAccountService;
 import com.barry.bank.application.services.CustomerService;
-import com.barry.bank.domain.entities.BankAccount;
-import com.barry.bank.domain.entities.Customer;
-import com.barry.bank.domain.entities.Operation;
+import com.barry.bank.domain.model.BankAccount;
+import com.barry.bank.domain.model.Customer;
+import com.barry.bank.domain.model.Operation;
 import com.barry.bank.domain.exception.DuplicateResourceException;
 import com.barry.bank.domain.exception.ResourceNotFoundException;
 import com.barry.bank.persistence.repositories.BankAccountRepository;
