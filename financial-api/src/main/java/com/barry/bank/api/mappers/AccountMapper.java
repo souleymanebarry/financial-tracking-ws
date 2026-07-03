@@ -2,26 +2,22 @@ package com.barry.bank.api.mappers;
 
 import com.barry.bank.api.dtos.AccountDTO;
 import com.barry.bank.api.dtos.AccountHistoryDTO;
-import com.barry.bank.api.dtos.CurrentAccountDTO;
-import com.barry.bank.api.dtos.SavingAccountDTO;
-import com.barry.bank.domain.entities.BankAccount;
-import com.barry.bank.domain.entities.CurrentAccount;
-import com.barry.bank.domain.entities.Operation;
-import com.barry.bank.domain.entities.SavingAccount;
-import org.mapstruct.BeanMapping;
+import com.barry.bank.domain.model.BankAccount;
+import com.barry.bank.domain.model.CurrentAccount;
+import com.barry.bank.domain.model.Operation;
+import com.barry.bank.domain.model.SavingAccount;
+import com.barry.bank.domain.enumerations.AccountType;
+import org.mapstruct.AfterMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
 import org.mapstruct.ReportingPolicy;
-import org.mapstruct.SubclassMapping;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 
-@Mapper(componentModel = "spring", uses = {
-        BankAccountEntityFactory.class,
+@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.ERROR, uses = {
         CustomerMapper.class,
-        OperationMapper.class,
-        CurrentAccountMapper.class,
-        SavingAccountMapper.class
+        OperationMapper.class
 })
 public abstract class AccountMapper {
 
@@ -32,17 +28,30 @@ public abstract class AccountMapper {
         this.operationMapper = operationMapper;
     }
 
-    @BeanMapping(unmappedTargetPolicy = ReportingPolicy.IGNORE)
-    @Mapping(target = "customer", source = "customerDTO")
-    @Mapping(target = "operations", ignore = true)
-    public abstract BankAccount accountDtoToAccount(AccountDTO accountDTO);
-
-    @SubclassMapping(source = CurrentAccount.class, target = CurrentAccountDTO.class)
-    @SubclassMapping(source = SavingAccount.class, target = SavingAccountDTO.class)
-    @BeanMapping(unmappedTargetPolicy = ReportingPolicy.IGNORE)
     @Mapping(target = "customerDTO", source = "customer")
-    @Mapping(target = "accountType", ignore = true)
+    @Mapping(target = "accountType", ignore = true)  // renseignés selon le type concret
+    @Mapping(target = "overDraft", ignore = true)    // dans fillTypeSpecificFields
+    @Mapping(target = "interestRate", ignore = true)
     public abstract AccountDTO accountToAccountDto(BankAccount account);
+
+    @AfterMapping
+    protected void fillTypeSpecificFields(BankAccount account, @MappingTarget AccountDTO dto) {
+        if (account instanceof CurrentAccount current) {
+            dto.setAccountType(AccountType.CURRENT_ACCOUNT.getLabel());
+            dto.setOverDraft(current.getOverDraft());
+        } else if (account instanceof SavingAccount saving) {
+            dto.setAccountType(AccountType.SAVING_ACCOUNT.getLabel());
+            dto.setInterestRate(saving.getInterestRate());
+        }
+    }
+
+    @Mapping(target = "customer", ignore = true)   // attaché par le service à la création
+    @Mapping(target = "operations", ignore = true) // relation inverse, jamais fournie par le client
+    public abstract CurrentAccount accountDtoToCurrentAccount(AccountDTO accountDTO);
+
+    @Mapping(target = "customer", ignore = true)   // attaché par le service à la création
+    @Mapping(target = "operations", ignore = true) // relation inverse, jamais fournie par le client
+    public abstract SavingAccount accountDtoToSavingAccount(AccountDTO accountDTO);
 
     public AccountHistoryDTO toAccountHistoryDTO(BankAccount account, Page<Operation> operationPage) {
         AccountHistoryDTO dto = new AccountHistoryDTO();

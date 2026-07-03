@@ -1,6 +1,7 @@
 package com.barry.bank.api.dtos;
 
-import com.barry.bank.domain.entities.enums.AccountStatus;
+import com.barry.bank.domain.enumerations.AccountStatus;
+import com.barry.bank.domain.enumerations.AccountType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
@@ -30,7 +31,8 @@ public class AccountDTO {
     @Schema(description = "Customer who owns this account")
     private CustomerDTO customerDTO;
 
-    @Schema(description = "Type of the account", example = "CURRENT ACCOUNT", allowableValues = {"CURRENT ACCOUNT", "SAVING ACCOUNT"})
+    @Schema(description = "Type of the account", example = AccountType.Values.CURRENT_ACCOUNT,
+            allowableValues = {AccountType.Values.CURRENT_ACCOUNT, AccountType.Values.SAVING_ACCOUNT})
     private String accountType;
 
     @Schema(description = "Overdraft limit — applicable to current accounts only", example = "500.00")

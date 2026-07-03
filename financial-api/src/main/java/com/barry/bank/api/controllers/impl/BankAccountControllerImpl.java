@@ -6,23 +6,19 @@ import com.barry.bank.api.controllers.BankAccountController;
 import com.barry.bank.api.dtos.AccountDTO;
 import com.barry.bank.api.dtos.AccountHistoryDTO;
 import com.barry.bank.api.dtos.CreditRequestDTO;
-import com.barry.bank.api.dtos.CurrentAccountDTO;
 import com.barry.bank.api.dtos.DebitRequestDTO;
 import com.barry.bank.api.dtos.OperationDTO;
-import com.barry.bank.api.dtos.SavingAccountDTO;
 import com.barry.bank.api.dtos.TransferDTO;
 import com.barry.bank.api.mappers.AccountMapper;
-import com.barry.bank.api.mappers.CurrentAccountMapper;
 import com.barry.bank.api.mappers.OperationMapper;
-import com.barry.bank.api.mappers.SavingAccountMapper;
 import com.barry.bank.application.services.BankAccountService;
 import com.barry.bank.application.services.CustomerService;
 import com.barry.bank.application.services.OperationService;
-import com.barry.bank.domain.entities.BankAccount;
-import com.barry.bank.domain.entities.CurrentAccount;
-import com.barry.bank.domain.entities.Customer;
-import com.barry.bank.domain.entities.Operation;
-import com.barry.bank.domain.entities.SavingAccount;
+import com.barry.bank.domain.model.BankAccount;
+import com.barry.bank.domain.model.CurrentAccount;
+import com.barry.bank.domain.model.Customer;
+import com.barry.bank.domain.model.Operation;
+import com.barry.bank.domain.model.SavingAccount;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.data.domain.Page;
@@ -45,8 +41,6 @@ public class BankAccountControllerImpl implements BankAccountController {
     private final OperationService operationService;
     private final AccountMapper accountMapper;
     private final OperationMapper operationMapper;
-    private final CurrentAccountMapper currentAccountMapper;
-    private final SavingAccountMapper savingAccountMapper;
 
     @Override
     public ResponseEntity<List<AccountDTO>> getAllAccounts() {
@@ -120,26 +114,26 @@ public class BankAccountControllerImpl implements BankAccountController {
     }
 
     @Override
-    public  ResponseEntity<CurrentAccountDTO> createCurrentAccount(UUID customerId, CurrentAccountDTO accountDTO) {
+    public  ResponseEntity<AccountDTO> createCurrentAccount(UUID customerId, AccountDTO accountDTO) {
         log.info("POST /api/v1/accounts/{}/current-account", customerId);
         Customer customer = customerService.getCustomerById(customerId);
-        CurrentAccount account = currentAccountMapper.currentAccountDtoToCurrentAccount(accountDTO);
+        CurrentAccount account = accountMapper.accountDtoToCurrentAccount(accountDTO);
         CurrentAccount savedAccount = accountService.createCurrentAccount(account, customer);
-        CurrentAccountDTO currentAccountDTO = currentAccountMapper.currentAccountToCurrentAccountDto(savedAccount);
+        AccountDTO createdAccountDTO = accountMapper.accountToAccountDto(savedAccount);
 
         URI location = URI.create(String.format("api/v1/accounts/%s", savedAccount.getAccountId()));
-        return ResponseEntity.created(location).body(currentAccountDTO);
+        return ResponseEntity.created(location).body(createdAccountDTO);
     }
 
     @Override
-    public ResponseEntity<SavingAccountDTO> createSavingAccount(UUID customerId, SavingAccountDTO accountDTO) {
+    public ResponseEntity<AccountDTO> createSavingAccount(UUID customerId, AccountDTO accountDTO) {
         log.info("POST /api/v1/accounts/{}/saving-account", customerId);
         Customer customer = customerService.getCustomerById(customerId);
-        SavingAccount account = savingAccountMapper.savingAccountDtoToSavingAccount(accountDTO);
+        SavingAccount account = accountMapper.accountDtoToSavingAccount(accountDTO);
         SavingAccount savedAccount = accountService.createSavingAccount(account, customer);
-        SavingAccountDTO savingAccountDTO = savingAccountMapper.savingAccountToSavingAccountDto(savedAccount);
+        AccountDTO createdAccountDTO = accountMapper.accountToAccountDto(savedAccount);
 
         URI location = URI.create(String.format("api/v1/accounts/%s", savedAccount.getAccountId()));
-        return ResponseEntity.created(location).body(savingAccountDTO);
+        return ResponseEntity.created(location).body(createdAccountDTO);
     }
 }
