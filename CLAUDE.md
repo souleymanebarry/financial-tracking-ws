@@ -51,7 +51,7 @@ financial-test-support  (test scope only, used by all modules)
 | `financial-persistence` | `com.barry.bank.persistence` | Spring Data JPA repositories, Liquibase migrations |
 | `financial-application` | `com.barry.bank.application` | Service interfaces + implementations, business logic |
 | `financial-api` | `com.barry.bank.api` | `@SpringBootApplication`, REST controllers, DTOs, MapStruct mappers, security, Swagger |
-| `financial-test-support` | — | WireMock helpers, shared test fixtures |
+| `financial-test-support` | — | Test dependency aggregator (`packaging: pom`, no sources) — pulls spring-boot-starter-test + WireMock; consumers declare it with `<type>pom</type>` |
 
 **Only `financial-api` produces an executable Spring Boot JAR.** All other modules produce plain JARs.
 
@@ -59,7 +59,7 @@ financial-test-support  (test scope only, used by all modules)
 
 **Controllers are split into interface + impl.** `CustomerController.java` declares the API contract (with OpenAPI annotations), `CustomerControllerImpl.java` implements it. New endpoints go in the interface first.
 
-**MapStruct for DTO mapping.** Mappers live in `financial-api/.../mappers/`. The `BankAccountEntityFactory` and `BankAccountDtoFactory` handle polymorphic account type conversion (Current vs Saving). Lombok + MapStruct annotation processors are configured together in the compiler plugin — order matters.
+**MapStruct for DTO mapping.** Mappers live in `financial-api/.../mappers/`. `AccountDTO` is a single flat DTO for both account types, discriminated by `accountType`; `AccountMapper` fills the type-specific fields (`overDraft`/`interestRate`) in an `@AfterMapping`. The account type labels live in the `AccountType` enum (`financial-domain`), single source of truth for `@DiscriminatorValue`, API values and the archive payload. All mappers use `unmappedTargetPolicy = ReportingPolicy.ERROR` — unmapped fields must be explicitly `ignore`d. Lombok + MapStruct annotation processors are configured together in the compiler plugin — order matters.
 
 **JWT with RSA keys.** Security uses asymmetric RSA (not HMAC256). Keys are loaded from Spring Cloud Vault in `local`/`prod` profiles, and from classpath in tests. `KeyUtils.java` handles PEM parsing. `RsaKeyProperties` binds the key paths.
 
