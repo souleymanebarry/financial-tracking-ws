@@ -1,6 +1,6 @@
 package com.barry.bank.persistence.repositories;
 
-import com.barry.bank.domain.entities.Operation;
+import com.barry.bank.domain.model.Operation;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;

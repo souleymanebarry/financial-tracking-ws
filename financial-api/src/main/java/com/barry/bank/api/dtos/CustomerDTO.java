@@ -1,7 +1,7 @@
 package com.barry.bank.api.dtos;
 
 import com.barry.bank.api.validation.OnCreate;
-import com.barry.bank.domain.entities.enums.Gender;
+import com.barry.bank.domain.enumerations.Gender;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;

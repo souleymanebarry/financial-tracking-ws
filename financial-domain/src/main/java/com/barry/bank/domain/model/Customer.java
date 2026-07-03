@@ -1,6 +1,6 @@
-package com.barry.bank.domain.entities;
+package com.barry.bank.domain.model;
 
-import com.barry.bank.domain.entities.enums.Gender;
+import com.barry.bank.domain.enumerations.Gender;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -50,8 +50,7 @@ public class Customer {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof Customer)) return false;
-        Customer that = (Customer) o;
+        if (!(o instanceof Customer that)) return false;
         return customerId != null && Objects.equals(customerId, that.customerId);
     }
 

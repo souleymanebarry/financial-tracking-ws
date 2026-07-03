@@ -3,7 +3,7 @@ package com.barry.bank.api.customer.service.impl;
 import com.barry.bank.api.archive.sync.service.CustomerArchiveService;
 import com.barry.bank.api.customer.service.CustomerDeletionService;
 import com.barry.bank.application.services.CustomerService;
-import com.barry.bank.domain.entities.Customer;
+import com.barry.bank.domain.model.Customer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;

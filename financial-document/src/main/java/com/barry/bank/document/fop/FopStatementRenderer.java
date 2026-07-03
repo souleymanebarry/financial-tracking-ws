@@ -4,7 +4,7 @@ import com.barry.bank.document.statement.DocumentRenderingException;
 import com.barry.bank.document.statement.StatementData;
 import com.barry.bank.document.statement.StatementLineData;
 import com.barry.bank.document.statement.StatementRenderer;
-import com.barry.bank.domain.entities.enums.OperationType;
+import com.barry.bank.domain.enumerations.OperationType;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;

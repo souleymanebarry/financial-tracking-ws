@@ -1,7 +1,7 @@
 package com.barry.bank.persistence.repositories;
 
-import com.barry.bank.domain.entities.BankStatement;
-import com.barry.bank.domain.entities.enums.StatementStatus;
+import com.barry.bank.domain.model.BankStatement;
+import com.barry.bank.domain.enumerations.StatementStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

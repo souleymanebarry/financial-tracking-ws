@@ -1,11 +1,11 @@
 package com.barry.bank.application.services.impl;
 
 import com.barry.bank.application.services.BankAccountService;
-import com.barry.bank.domain.entities.BankAccount;
-import com.barry.bank.domain.entities.CurrentAccount;
-import com.barry.bank.domain.entities.Customer;
-import com.barry.bank.domain.entities.Operation;
-import com.barry.bank.domain.entities.SavingAccount;
+import com.barry.bank.domain.model.BankAccount;
+import com.barry.bank.domain.model.CurrentAccount;
+import com.barry.bank.domain.model.Customer;
+import com.barry.bank.domain.model.Operation;
+import com.barry.bank.domain.model.SavingAccount;
 import com.barry.bank.domain.exception.DuplicateResourceException;
 import com.barry.bank.domain.exception.ResourceNotFoundException;
 import com.barry.bank.persistence.repositories.BankAccountRepository;
@@ -36,9 +36,9 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Stream;
 
-import static com.barry.bank.domain.entities.enums.AccountStatus.CREATED;
-import static com.barry.bank.domain.entities.enums.Gender.MALE;
-import static com.barry.bank.domain.entities.enums.OperationType.CREDIT;
+import static com.barry.bank.domain.enumerations.AccountStatus.CREATED;
+import static com.barry.bank.domain.enumerations.Gender.MALE;
+import static com.barry.bank.domain.enumerations.OperationType.CREDIT;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;

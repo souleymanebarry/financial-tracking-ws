@@ -1,6 +1,6 @@
 package com.barry.bank.application.services;
 
-import com.barry.bank.domain.entities.Customer;
+import com.barry.bank.domain.model.Customer;
 
 import java.util.List;
 import java.util.UUID;

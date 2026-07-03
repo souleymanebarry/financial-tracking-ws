@@ -1,6 +1,6 @@
 package com.barry.bank.persistence.repositories;
 
-import com.barry.bank.domain.entities.StatementLine;
+import com.barry.bank.domain.model.StatementLine;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
