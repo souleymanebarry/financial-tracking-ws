@@ -1,8 +1,8 @@
 package com.barry.bank.persistence.repositories;
 
-import com.barry.bank.domain.entities.BankAccount;
-import com.barry.bank.domain.entities.CurrentAccount;
-import com.barry.bank.domain.entities.Customer;
+import com.barry.bank.domain.model.BankAccount;
+import com.barry.bank.domain.model.CurrentAccount;
+import com.barry.bank.domain.model.Customer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,14 +17,14 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import static com.barry.bank.domain.entities.enums.Gender.FEMALE;
-import static com.barry.bank.domain.entities.enums.Gender.MALE;
+import static com.barry.bank.domain.enumerations.Gender.FEMALE;
+import static com.barry.bank.domain.enumerations.Gender.MALE;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DataJpaTest
 @ActiveProfiles("h2")
 @ContextConfiguration(classes = BankAccountRepositoryTest.class)
-@EntityScan(basePackages = "com.barry.bank.domain.entities")
+@EntityScan(basePackages = "com.barry.bank.domain.model")
 @EnableJpaRepositories(basePackages = "com.barry.bank.persistence.repositories")
 class BankAccountRepositoryTest {
 

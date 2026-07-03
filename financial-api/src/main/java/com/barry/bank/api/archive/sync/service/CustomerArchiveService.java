@@ -1,7 +1,7 @@
 package com.barry.bank.api.archive.sync.service;
 
 
-import com.barry.bank.domain.entities.Customer;
+import com.barry.bank.domain.model.Customer;
 
 public interface CustomerArchiveService {
 

@@ -1,11 +1,11 @@
 package com.barry.bank.batch.statement.processor;
 
-import com.barry.bank.domain.entities.BankStatement;
-import com.barry.bank.domain.entities.CurrentAccount;
-import com.barry.bank.domain.entities.Customer;
-import com.barry.bank.domain.entities.Operation;
-import com.barry.bank.domain.entities.enums.OperationType;
-import com.barry.bank.domain.entities.enums.StatementStatus;
+import com.barry.bank.domain.model.BankStatement;
+import com.barry.bank.domain.model.CurrentAccount;
+import com.barry.bank.domain.model.Customer;
+import com.barry.bank.domain.model.Operation;
+import com.barry.bank.domain.enumerations.OperationType;
+import com.barry.bank.domain.enumerations.StatementStatus;
 import com.barry.bank.persistence.repositories.BankStatementRepository;
 import com.barry.bank.persistence.repositories.OperationRepository;
 import org.junit.jupiter.api.BeforeEach;

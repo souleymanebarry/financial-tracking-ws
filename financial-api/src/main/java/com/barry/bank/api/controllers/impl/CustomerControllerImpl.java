@@ -5,7 +5,7 @@ import com.barry.bank.api.customer.service.CustomerDeletionService;
 import com.barry.bank.api.dtos.CustomerDTO;
 import com.barry.bank.api.mappers.CustomerMapper;
 import com.barry.bank.application.services.CustomerService;
-import com.barry.bank.domain.entities.Customer;
+import com.barry.bank.domain.model.Customer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 

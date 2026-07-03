@@ -1,6 +1,6 @@
 package com.barry.bank.batch.statement.writer;
 
-import com.barry.bank.domain.entities.BankStatement;
+import com.barry.bank.domain.model.BankStatement;
 import com.barry.bank.persistence.repositories.BankStatementRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;

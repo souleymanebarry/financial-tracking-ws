@@ -1,7 +1,7 @@
 package com.barry.bank.batch.statement.reader;
 
-import com.barry.bank.domain.entities.BankAccount;
-import com.barry.bank.domain.entities.enums.AccountStatus;
+import com.barry.bank.domain.model.BankAccount;
+import com.barry.bank.domain.enumerations.AccountStatus;
 import com.barry.bank.persistence.repositories.BankAccountRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;

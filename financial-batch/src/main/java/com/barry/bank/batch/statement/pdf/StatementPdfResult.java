@@ -1,6 +1,6 @@
 package com.barry.bank.batch.statement.pdf;
 
-import com.barry.bank.domain.entities.BankStatement;
+import com.barry.bank.domain.model.BankStatement;
 
 /**
  * Résultat du processor PDF : le relevé enrichi + les bytes du document généré.

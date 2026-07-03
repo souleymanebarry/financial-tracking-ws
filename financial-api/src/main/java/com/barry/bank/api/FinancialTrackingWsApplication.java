@@ -10,7 +10,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 @EnableConfigurationProperties(RsaKeyProperties.class)
 @SpringBootApplication(scanBasePackages = "com.barry.bank")
-@EntityScan(basePackages = "com.barry.bank.domain.entities")
+@EntityScan(basePackages = "com.barry.bank.domain.model")
 @EnableJpaRepositories(basePackages = "com.barry.bank.persistence.repositories")
 public class FinancialTrackingWsApplication {
 
