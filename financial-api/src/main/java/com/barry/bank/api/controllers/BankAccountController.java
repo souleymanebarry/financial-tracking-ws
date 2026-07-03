@@ -3,10 +3,8 @@ package com.barry.bank.api.controllers;
 import com.barry.bank.api.dtos.AccountDTO;
 import com.barry.bank.api.dtos.AccountHistoryDTO;
 import com.barry.bank.api.dtos.CreditRequestDTO;
-import com.barry.bank.api.dtos.CurrentAccountDTO;
 import com.barry.bank.api.dtos.DebitRequestDTO;
 import com.barry.bank.api.dtos.OperationDTO;
-import com.barry.bank.api.dtos.SavingAccountDTO;
 import com.barry.bank.api.dtos.TransferDTO;
 import jakarta.validation.constraints.Min;
 import io.swagger.v3.oas.annotations.Operation;
@@ -159,23 +157,23 @@ public interface BankAccountController {
 
     @Operation(summary = "Create current account")
     @ApiResponse(responseCode = "201", description = "Current account created",
-            content = @Content(mediaType = "application/json", schema = @Schema(implementation = CurrentAccountDTO.class)))
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = AccountDTO.class)))
     @ApiResponse(responseCode = "401", description = "Unauthorized — valid JWT required")
     @ApiResponse(responseCode = "404", description = "Customer not found")
     @PostMapping("/{customerId}/current-account")
-    ResponseEntity<CurrentAccountDTO> createCurrentAccount(
+    ResponseEntity<AccountDTO> createCurrentAccount(
             @Parameter(description = "Unique identifier of the customer", example = "3fa85f64-5717-4562-b3fc-2c963f66afa6")
             @PathVariable UUID customerId,
-            @Valid @RequestBody CurrentAccountDTO accountDTO);
+            @Valid @RequestBody AccountDTO accountDTO);
 
     @Operation(summary = "Create saving account")
     @ApiResponse(responseCode = "201", description = "Saving account created",
-            content = @Content(mediaType = "application/json", schema = @Schema(implementation = SavingAccountDTO.class)))
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = AccountDTO.class)))
     @ApiResponse(responseCode = "401", description = "Unauthorized — valid JWT required")
     @ApiResponse(responseCode = "404", description = "Customer not found")
     @PostMapping("/{customerId}/saving-account")
-    ResponseEntity<SavingAccountDTO> createSavingAccount(
+    ResponseEntity<AccountDTO> createSavingAccount(
             @Parameter(description = "Unique identifier of the customer", example = "3fa85f64-5717-4562-b3fc-2c963f66afa6")
             @PathVariable UUID customerId,
-            @Valid @RequestBody SavingAccountDTO accountDTO);
+            @Valid @RequestBody AccountDTO accountDTO);
 }
