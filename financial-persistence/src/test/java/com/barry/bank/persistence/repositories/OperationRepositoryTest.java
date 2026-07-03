@@ -1,9 +1,9 @@
 package com.barry.bank.persistence.repositories;
 
 
-import com.barry.bank.domain.entities.CurrentAccount;
-import com.barry.bank.domain.entities.Customer;
-import com.barry.bank.domain.entities.Operation;
+import com.barry.bank.domain.model.CurrentAccount;
+import com.barry.bank.domain.model.Customer;
+import com.barry.bank.domain.model.Operation;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -25,17 +25,17 @@ import java.util.List;
 import java.util.UUID;
 
 
-import static com.barry.bank.domain.entities.enums.Gender.FEMALE;
-import static com.barry.bank.domain.entities.enums.Gender.MALE;
-import static com.barry.bank.domain.entities.enums.OperationType.CREDIT;
-import static com.barry.bank.domain.entities.enums.OperationType.DEBIT;
+import static com.barry.bank.domain.enumerations.Gender.FEMALE;
+import static com.barry.bank.domain.enumerations.Gender.MALE;
+import static com.barry.bank.domain.enumerations.OperationType.CREDIT;
+import static com.barry.bank.domain.enumerations.OperationType.DEBIT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
 
 @DataJpaTest
 @ActiveProfiles("h2")
 @ContextConfiguration(classes = OperationRepositoryTest.class)
-@EntityScan(basePackages = "com.barry.bank.domain.entities")
+@EntityScan(basePackages = "com.barry.bank.domain.model")
 @EnableJpaRepositories(basePackages = "com.barry.bank.persistence.repositories")
 class OperationRepositoryTest {
 

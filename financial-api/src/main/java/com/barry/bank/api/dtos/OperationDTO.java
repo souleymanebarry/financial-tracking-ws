@@ -1,6 +1,6 @@
 package com.barry.bank.api.dtos;
 
-import com.barry.bank.domain.entities.enums.OperationType;
+import com.barry.bank.domain.enumerations.OperationType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 

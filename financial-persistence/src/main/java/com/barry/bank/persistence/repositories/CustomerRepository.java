@@ -1,7 +1,7 @@
 package com.barry.bank.persistence.repositories;
 
 
-import com.barry.bank.domain.entities.Customer;
+import com.barry.bank.domain.model.Customer;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.UUID;

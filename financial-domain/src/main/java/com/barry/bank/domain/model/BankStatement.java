@@ -1,14 +1,17 @@
-package com.barry.bank.domain.entities;
+package com.barry.bank.domain.model;
 
-import com.barry.bank.domain.entities.enums.OperationType;
+import com.barry.bank.domain.enumerations.StatementStatus;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
+import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.UuidGenerator;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -17,7 +20,10 @@ import lombok.Setter;
 import lombok.ToString;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -27,35 +33,41 @@ import java.util.UUID;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@ToString(exclude = "statement")
-public class StatementLine {
+@ToString(exclude = {"account", "lines"})
+public class BankStatement {
 
     @Id
     @UuidGenerator(style = UuidGenerator.Style.TIME)
     private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "STATEMENT_ID", nullable = false)
-    private BankStatement statement;
+    @JoinColumn(name = "ACCOUNT_ID", nullable = false)
+    private BankAccount account;
 
-    private String operationNumber;
+    private LocalDate periodStart;
 
-    private LocalDateTime operationDate;
+    private LocalDate periodEnd;
 
-    private String label;
+    private BigDecimal openingBalance;
 
-    private BigDecimal amount;
+    private BigDecimal closingBalance;
 
     @Enumerated(EnumType.STRING)
-    private OperationType operationType;
+    private StatementStatus status;
 
-    private BigDecimal runningBalance;
+    private String fileUrl;
+
+    private LocalDateTime generatedAt;
+
+    @OneToMany(mappedBy = "statement", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @BatchSize(size = 50)
+    @Builder.Default
+    private List<StatementLine> lines = new ArrayList<>();
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof StatementLine)) return false;
-        StatementLine that = (StatementLine) o;
+        if (!(o instanceof BankStatement that)) return false;
         return id != null && Objects.equals(id, that.id);
     }
 

@@ -1,9 +1,9 @@
 package com.barry.bank.application.services.impl;
 
 import com.barry.bank.application.services.OperationService;
-import com.barry.bank.domain.entities.BankAccount;
-import com.barry.bank.domain.entities.Operation;
-import com.barry.bank.domain.entities.enums.OperationType;
+import com.barry.bank.domain.model.BankAccount;
+import com.barry.bank.domain.model.Operation;
+import com.barry.bank.domain.enumerations.OperationType;
 import com.barry.bank.domain.exception.ResourceNotFoundException;
 import com.barry.bank.persistence.repositories.BankAccountRepository;
 import com.barry.bank.persistence.repositories.OperationRepository;
@@ -19,8 +19,8 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.UUID;
 
-import static com.barry.bank.domain.entities.enums.OperationType.CREDIT;
-import static com.barry.bank.domain.entities.enums.OperationType.DEBIT;
+import static com.barry.bank.domain.enumerations.OperationType.CREDIT;
+import static com.barry.bank.domain.enumerations.OperationType.DEBIT;
 
 @Service
 @Log4j2

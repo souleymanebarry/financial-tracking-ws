@@ -6,11 +6,12 @@ import com.barry.bank.api.archive.sync.dtos.AccountArchiveDTO;
 import com.barry.bank.api.archive.sync.dtos.CustomerArchiveDTO;
 import com.barry.bank.api.archive.sync.dtos.OperationArchiveDTO;
 import com.barry.bank.api.archive.sync.service.CustomerArchiveService;
-import com.barry.bank.domain.entities.BankAccount;
-import com.barry.bank.domain.entities.CurrentAccount;
-import com.barry.bank.domain.entities.Customer;
-import com.barry.bank.domain.entities.Operation;
-import com.barry.bank.domain.entities.SavingAccount;
+import com.barry.bank.domain.model.BankAccount;
+import com.barry.bank.domain.model.CurrentAccount;
+import com.barry.bank.domain.model.Customer;
+import com.barry.bank.domain.model.Operation;
+import com.barry.bank.domain.model.SavingAccount;
+import com.barry.bank.domain.enumerations.AccountType;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -64,7 +65,9 @@ public class CustomerArchiveServiceImpl implements CustomerArchiveService {
                 .createdAt(account.getCreatedAt())
                 .rib(account.getRib())
                 .status(account.getStatus().name())
-                .accountType(account instanceof CurrentAccount ? "CURRENT ACCOUNT" : "SAVING ACCOUNT")
+                .accountType((account instanceof CurrentAccount
+                        ? AccountType.CURRENT_ACCOUNT
+                        : AccountType.SAVING_ACCOUNT).getLabel())
                 .operations(operations)
                 .build();
 

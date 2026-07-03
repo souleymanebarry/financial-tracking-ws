@@ -1,7 +1,6 @@
-package com.barry.bank.domain.entities;
+package com.barry.bank.domain.model;
 
-import com.barry.bank.domain.entities.enums.OperationType;
-
+import com.barry.bank.domain.enumerations.OperationType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -52,8 +51,7 @@ public class Operation {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof Operation)) return false;
-        Operation that = (Operation) o;
+        if (!(o instanceof Operation that)) return false;
         return operationId != null && Objects.equals(operationId, that.operationId);
     }
 

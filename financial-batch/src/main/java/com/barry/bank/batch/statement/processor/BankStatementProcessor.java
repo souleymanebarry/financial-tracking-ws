@@ -1,10 +1,10 @@
 package com.barry.bank.batch.statement.processor;
 
-import com.barry.bank.domain.entities.BankAccount;
-import com.barry.bank.domain.entities.BankStatement;
-import com.barry.bank.domain.entities.Operation;
-import com.barry.bank.domain.entities.StatementLine;
-import com.barry.bank.domain.entities.enums.StatementStatus;
+import com.barry.bank.domain.model.BankAccount;
+import com.barry.bank.domain.model.BankStatement;
+import com.barry.bank.domain.model.Operation;
+import com.barry.bank.domain.model.StatementLine;
+import com.barry.bank.domain.enumerations.StatementStatus;
 import com.barry.bank.persistence.repositories.BankStatementRepository;
 import com.barry.bank.persistence.repositories.OperationRepository;
 import jakarta.annotation.PostConstruct;

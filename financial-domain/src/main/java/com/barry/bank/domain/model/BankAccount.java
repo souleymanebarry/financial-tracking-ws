@@ -1,6 +1,6 @@
-package com.barry.bank.domain.entities;
+package com.barry.bank.domain.model;
 
-import com.barry.bank.domain.entities.enums.AccountStatus;
+import com.barry.bank.domain.enumerations.AccountStatus;
 import com.barry.bank.domain.exception.InsufficientBalanceException;
 import jakarta.persistence.Column;
 import jakarta.persistence.DiscriminatorColumn;
@@ -10,13 +10,11 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
-import org.hibernate.annotations.UuidGenerator;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -24,6 +22,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
+import org.hibernate.annotations.UuidGenerator;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -101,8 +100,7 @@ public abstract class BankAccount {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof BankAccount)) return false;
-        BankAccount that = (BankAccount) o;
+        if (!(o instanceof BankAccount that)) return false;
         return accountId != null && Objects.equals(accountId, that.accountId);
     }
 

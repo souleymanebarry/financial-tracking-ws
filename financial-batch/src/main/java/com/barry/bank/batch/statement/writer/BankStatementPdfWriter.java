@@ -2,8 +2,8 @@ package com.barry.bank.batch.statement.writer;
 
 import com.barry.bank.batch.config.MinioProperties;
 import com.barry.bank.batch.statement.pdf.StatementPdfResult;
-import com.barry.bank.domain.entities.BankStatement;
-import com.barry.bank.domain.entities.enums.StatementStatus;
+import com.barry.bank.domain.model.BankStatement;
+import com.barry.bank.domain.enumerations.StatementStatus;
 import com.barry.bank.persistence.repositories.BankStatementRepository;
 import io.minio.MinioClient;
 import io.minio.PutObjectArgs;

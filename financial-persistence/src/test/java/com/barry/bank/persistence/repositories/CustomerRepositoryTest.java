@@ -2,7 +2,7 @@ package com.barry.bank.persistence.repositories;
 
 
 
-import com.barry.bank.domain.entities.Customer;
+import com.barry.bank.domain.model.Customer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,14 +13,14 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 
 
-import static com.barry.bank.domain.entities.enums.Gender.MALE;
+import static com.barry.bank.domain.enumerations.Gender.MALE;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @ActiveProfiles("h2")
 @DataJpaTest
 @ContextConfiguration(classes = CustomerRepositoryTest.class)
 @EnableJpaRepositories(basePackages = "com.barry.bank.persistence.repositories")
-@EntityScan(basePackages = "com.barry.bank.domain.entities")
+@EntityScan(basePackages = "com.barry.bank.domain.model")
 class CustomerRepositoryTest {
 
     @Autowired

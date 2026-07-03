@@ -1,6 +1,6 @@
 package com.barry.bank.document.statement;
 
-import com.barry.bank.domain.entities.enums.OperationType;
+import com.barry.bank.domain.enumerations.OperationType;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;

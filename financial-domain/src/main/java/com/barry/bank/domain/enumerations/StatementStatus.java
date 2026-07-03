@@ -1,4 +1,4 @@
-package com.barry.bank.domain.entities.enums;
+package com.barry.bank.domain.enumerations;
 
 public enum StatementStatus {
     PENDING,
