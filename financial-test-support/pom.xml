@@ -12,8 +12,8 @@
     </parent>
 
     <artifactId>financial-test-support</artifactId>
-    <!-- Agrégateur de dépendances de test (aucune source) : packaging pom, pas de JAR produit -->
-    <packaging>pom</packaging>
+    <!-- Module de support de test : dépendances partagées + ressources de test communes
+         (schéma Liquibase des tests d'intégration) -->
 
     <dependencies>
 

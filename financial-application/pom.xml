@@ -37,7 +37,6 @@
         <dependency>
             <groupId>com.barry.bank</groupId>
             <artifactId>financial-test-support</artifactId>
-            <type>pom</type>
             <scope>test</scope>
         </dependency>
     </dependencies>
