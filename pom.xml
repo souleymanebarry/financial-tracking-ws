@@ -73,7 +73,6 @@
 				<groupId>com.barry.bank</groupId>
 				<artifactId>financial-test-support</artifactId>
 				<version>${project.version}</version>
-				<type>pom</type>
 			</dependency>
 			<dependency>
 				<groupId>com.barry.bank</groupId>
