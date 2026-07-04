@@ -1,0 +1,12 @@
+# =====================================================================
+# Changelog Liquibase dédié aux tests d'intégration (profil "it").
+# Totalement indépendant du changelog de production :
+# le schéma de test est défini dans ddl/ ci-dessous.
+# À maintenir aligné avec financial-persistence/db/changelog/DDL
+# lors de toute évolution du schéma.
+# =====================================================================
+databaseChangeLog:
+
+  - include:
+      file: ddl/001_init_test_schema.sql
+      relativeToChangelogFile: true

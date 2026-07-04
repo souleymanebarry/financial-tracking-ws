@@ -1,4 +1,14 @@
-    -- ==========================
+-- ==========================
+-- CLEANUP (le schéma est géré par Liquibase, ce script ne gère que les données)
+-- Ordre FK-safe : lignes de relevés -> relevés -> opérations -> comptes -> clients
+-- ==========================
+DELETE FROM statement_line;
+DELETE FROM bank_statement;
+DELETE FROM operation;
+DELETE FROM account;
+DELETE FROM customer;
+
+-- ==========================
 -- INSERT INTO CUSTOMER
 -- ==========================
 INSERT INTO customer (customer_id, first_name, last_name, email, gender)
