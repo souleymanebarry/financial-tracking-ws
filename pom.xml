@@ -37,6 +37,8 @@
 		<commons-collections4.version>4.5.0</commons-collections4.version>
 		<spring-cloud.version>2023.0.4</spring-cloud.version>
 		<jacoco.version>0.8.12</jacoco.version>
+		<!-- Override du BOM Spring Boot (1.19.8) : Docker Engine 29+ rejette le client docker-java des versions < 1.21.4 -->
+		<testcontainers.version>1.21.4</testcontainers.version>
 		<openapi.version>2.6.0</openapi.version>
 		<itext.version>7.2.6</itext.version>
 		<minio.version>8.5.10</minio.version>
