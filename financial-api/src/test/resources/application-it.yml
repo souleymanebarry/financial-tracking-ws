@@ -1,16 +1,12 @@
 spring:
-  datasource:
-    url: jdbc:postgresql://localhost:5432/financial_tracking_ws_it_db_test
-    username: postgres
-    password: 1234
-    driver-class-name: org.postgresql.Driver
+  # Datasource fourni par Testcontainers via @ServiceConnection (AbstractIntegrationTest) —
+  # aucune URL ni credentials en dur ici.
 
   # Changelog Liquibase dédié aux ITs, indépendant de la prod.
-  # drop-first recrée une base vierge à chaque démarrage de contexte Spring.
+  # Le conteneur étant vierge à chaque JVM de test, pas besoin de drop-first.
   liquibase:
     enabled: true
     change-log: classpath:/db/changelog/db.changelog-it.yaml
-    drop-first: true
 
   jpa:
     hibernate:
