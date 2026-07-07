@@ -1,0 +1,28 @@
+spring:
+  # =========================
+  # DataSource (PostgreSQL)
+  # =========================
+  # Mêmes conventions que financial-api : défauts locaux, surchargés par les
+  # variables d'environnement SPRING_DATASOURCE_* au déploiement.
+  datasource:
+    url: jdbc:postgresql://localhost:5432/financial-tracking-ws-db
+    username: postgres
+    password: ${POSTGRES_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+
+  # =========================
+  # Spring Batch
+  # =========================
+  batch:
+    jdbc:
+      # Tables de métadonnées créées par Liquibase (financial-persistence, DDL/007),
+      # appliqué au démarrage de financial-api — jamais par le batch lui-même.
+      initialize-schema: never
+
+# =========================
+# Logging
+# =========================
+logging:
+  level:
+    org.springframework.batch: INFO
+    com.barry.bank.batch: INFO
