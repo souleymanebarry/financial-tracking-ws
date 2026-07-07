@@ -18,6 +18,9 @@ databaseChangeLog:
       file: DDL/006_bank_statement_unique.sql
       relativeToChangelogFile: true
   - include:
+      file: DDL/007_spring_batch_metadata.sql
+      relativeToChangelogFile: true
+  - include:
       file: DML/001_insert_customer_data.sql
       relativeToChangelogFile: true
   - include:
