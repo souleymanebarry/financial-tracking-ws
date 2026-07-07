@@ -2,9 +2,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
-
 	<modelVersion>4.0.0</modelVersion>
-
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
@@ -14,7 +12,7 @@
 
 	<groupId>com.barry.bank</groupId>
 	<artifactId>financial-tracking-ws</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>${revision}</version>
 	<packaging>pom</packaging>
 
 	<modules>
@@ -28,6 +26,8 @@
 	</modules>
 
 	<properties>
+		<!-- Version CI-friendly : la CI la fixe depuis le tag git (-Drevision=1.2.3), défaut en dev -->
+		<revision>0.0.1-SNAPSHOT</revision>
 		<java.version>17</java.version>
 		<lombok.version>1.18.28</lombok.version>
 		<mapstruct.version>1.5.5.Final</mapstruct.version>
@@ -79,6 +79,11 @@
 			<dependency>
 				<groupId>com.barry.bank</groupId>
 				<artifactId>financial-document</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.barry.bank</groupId>
+				<artifactId>financial-batch</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<!-- MAPSTRUCT -->
@@ -152,6 +157,33 @@
 
 	<build>
 		<plugins>
+
+			<!-- Résout ${revision} dans les POMs installés/déployés (versions CI-friendly) -->
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>flatten-maven-plugin</artifactId>
+				<version>1.6.0</version>
+				<configuration>
+					<updatePomFile>true</updatePomFile>
+					<flattenMode>resolveCiFriendliesOnly</flattenMode>
+				</configuration>
+				<executions>
+					<execution>
+						<id>flatten</id>
+						<phase>process-resources</phase>
+						<goals>
+							<goal>flatten</goal>
+						</goals>
+					</execution>
+					<execution>
+						<id>flatten.clean</id>
+						<phase>clean</phase>
+						<goals>
+							<goal>clean</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
 
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>

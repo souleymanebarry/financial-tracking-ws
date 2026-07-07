@@ -1,0 +1,15 @@
+# Configuration commune à tous les profils.
+
+# =========================
+# Actuator — healthchecks
+# =========================
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      # Expose /actuator/health/liveness et /actuator/health/readiness
+      probes:
+        enabled: true
