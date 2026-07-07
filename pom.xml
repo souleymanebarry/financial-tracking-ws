@@ -15,6 +15,24 @@
 	<version>${revision}</version>
 	<packaging>pom</packaging>
 
+	<scm>
+		<url>https://github.com/souleymanebarry/financial-tracking-ws</url>
+		<connection>scm:git:https://github.com/souleymanebarry/financial-tracking-ws.git</connection>
+		<developerConnection>scm:git:git@github.com:souleymanebarry/financial-tracking-ws.git</developerConnection>
+		<tag>HEAD</tag>
+	</scm>
+
+	<!-- Publication des artefacts sur GitHub Packages.
+	     Auth : server id "github" dans settings.xml (GITHUB_TOKEN en CI,
+	     PAT avec write:packages en local). -->
+	<distributionManagement>
+		<repository>
+			<id>github</id>
+			<name>GitHub Packages — souleymanebarry/financial-tracking-ws</name>
+			<url>https://maven.pkg.github.com/souleymanebarry/financial-tracking-ws</url>
+		</repository>
+	</distributionManagement>
+
 	<modules>
 		<module>financial-domain</module>
 		<module>financial-test-support</module>
