@@ -1,7 +1,7 @@
 # ============================================================
-# Stage 1 — Build
+# Stage 1 — Build (commun aux deux exécutables)
 # ============================================================
-FROM openjdk:17-slim AS builder
+FROM eclipse-temurin:17-jdk AS builder
 WORKDIR /workspace
 
 # Copy Maven wrapper first — cached until wrapper version changes
@@ -31,20 +31,57 @@ COPY financial-test-support/src   financial-test-support/src
 COPY financial-batch/src          financial-batch/src
 COPY financial-document/src       financial-document/src
 
-# Build + extract Spring Boot layers (tests run separately in CI)
-RUN ./mvnw clean package -pl financial-api -am -DskipTests -q && \
+# Build + extract Spring Boot layers for both executables (tests run separately in CI)
+RUN ./mvnw clean package -pl financial-api,financial-batch -am -DskipTests -q && \
     java -Djarmode=layertools \
          -jar financial-api/target/financial-api-*.jar \
-         extract --destination financial-api/target/extracted
+         extract --destination financial-api/target/extracted && \
+    java -Djarmode=layertools \
+         -jar financial-batch/target/financial-batch-*.jar \
+         extract --destination financial-batch/target/extracted
 
 # ============================================================
-# Stage 2 — Runtime
+# Stage 2 — Base runtime commune (user non-root)
 # ============================================================
-FROM openjdk:17-slim AS runtime
+FROM eclipse-temurin:17-jre AS runtime-base
 
-# Non-root user
-RUN groupadd -r appgroup && useradd -r -g appgroup appuser
+# curl requis par les healthchecks (docker-compose / orchestrateur)
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends curl && \
+    rm -rf /var/lib/apt/lists/* && \
+    groupadd -r appgroup && useradd -r -g appgroup appuser
 WORKDIR /app
+
+ENTRYPOINT ["java", \
+  "-XX:+UseContainerSupport", \
+  "-XX:MaxRAMPercentage=75.0", \
+  "-Duser.timezone=Europe/Paris", \
+  "-Dsun.net.inetaddr.ttl=60", \
+  "org.springframework.boot.loader.launch.JarLauncher"]
+
+# ============================================================
+# Stage 3 — Runtime financial-batch  (docker build --target batch)
+# ============================================================
+FROM runtime-base AS batch
+
+# Spring Boot layered copy: stable layers first → app layer last
+COPY --from=builder --chown=appuser:appgroup \
+    /workspace/financial-batch/target/extracted/dependencies/ ./
+COPY --from=builder --chown=appuser:appgroup \
+    /workspace/financial-batch/target/extracted/spring-boot-loader/ ./
+COPY --from=builder --chown=appuser:appgroup \
+    /workspace/financial-batch/target/extracted/snapshot-dependencies/ ./
+COPY --from=builder --chown=appuser:appgroup \
+    /workspace/financial-batch/target/extracted/application/ ./
+
+USER appuser
+EXPOSE 8090
+
+# ============================================================
+# Stage 4 — Runtime financial-api  (docker build --target api,
+# dernier stage = cible par défaut d'un build sans --target)
+# ============================================================
+FROM runtime-base AS api
 
 # Spring Boot layered copy: stable layers first → app layer last
 # → only the last COPY is invalidated on a code-only change
@@ -59,10 +96,3 @@ COPY --from=builder --chown=appuser:appgroup \
 
 USER appuser
 EXPOSE 8080
-
-ENTRYPOINT ["java", \
-  "-XX:+UseContainerSupport", \
-  "-XX:MaxRAMPercentage=75.0", \
-  "-Duser.timezone=Europe/Paris", \
-  "-Dsun.net.inetaddr.ttl=60", \
-  "org.springframework.boot.loader.launch.JarLauncher"]
