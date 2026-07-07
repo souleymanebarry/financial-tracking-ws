@@ -1,12 +1,12 @@
-.gitattributes
-.mvn/
-mvnw
-mvnw.cmd
 HELP.md
 target/
 .mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
+
+# POMs générés par flatten-maven-plugin (versions CI-friendly)
+.flattened-pom.xml
+**/.flattened-pom.xml
 
 ### STS ###
 .apt_generated
