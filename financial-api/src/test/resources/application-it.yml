@@ -2,6 +2,13 @@ spring:
   # Datasource fourni par Testcontainers via @ServiceConnection (AbstractIntegrationTest) —
   # aucune URL ni credentials en dur ici.
 
+  # Le starter Vault est sur le classpath : sans cette désactivation, le health
+  # indicator Vault (Actuator) force l'instanciation du VaultTemplate au démarrage
+  # du contexte et fait échouer les ITs (pas de Vault ni de token en test/CI).
+  cloud:
+    vault:
+      enabled: false
+
   # Changelog Liquibase dédié aux ITs, indépendant de la prod.
   # Le conteneur étant vierge à chaque JVM de test, pas besoin de drop-first.
   liquibase:
