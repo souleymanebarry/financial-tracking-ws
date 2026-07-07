@@ -116,6 +116,14 @@ dev (in-memory — secrets are wiped on container restart, re-seeded by `vault-i
 `docker compose up`), MinIO, api and batch with actuator healthchecks. First boot on a fresh
 volume runs the full Liquibase migration (~8-10 min); the api healthcheck `start_period` is 180s.
 
+**CI/CD: GitHub Actions + GHCR.** `.github/workflows/ci.yml` runs `./mvnw clean verify` on
+PRs and pushes to `develop`/`master` (JaCoCo reports uploaded as build artifact, no blocking
+threshold — nothing is published). On `vX.Y.Z` tags only, after verify: jars are deployed to
+GitHub Packages and both images are pushed to
+`ghcr.io/souleymanebarry/financial-tracking-ws/financial-{api,batch}` tagged `X.Y.Z` +
+`latest`, all with `-Drevision=X.Y.Z` (forwarded to the Docker build via the `REVISION`
+build-arg). No SNAPSHOT is ever published.
+
 ## Migration Context
 
 The multi-module reorganization (from `com.barry.bank.financial.tracking_ws.*` to the
