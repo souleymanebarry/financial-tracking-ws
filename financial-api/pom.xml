@@ -66,6 +66,15 @@
 
     <build>
         <plugins>
+            <!-- Exécutable distribué en image Docker (buildée depuis les sources) —
+                 le fat jar n'est pas publié sur GitHub Packages -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-deploy-plugin</artifactId>
+                <configuration>
+                    <skip>true</skip>
+                </configuration>
+            </plugin>
             <!-- Exécute les tests d'intégration (*IT) en phase integration-test/verify -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
