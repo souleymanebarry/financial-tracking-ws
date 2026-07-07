@@ -4,6 +4,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      target: api
     container_name: financial-api
     ports:
       - "8080:8080"
@@ -12,18 +13,56 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/financial_db
       SPRING_DATASOURCE_USERNAME: financial_user
       SPRING_DATASOURCE_PASSWORD: financial_pass
-      SPRING_CLOUD_VAULT_HOST: vault
-      SPRING_CLOUD_VAULT_PORT: 8200
+      # URI complet requis : application-local.yml définit spring.cloud.vault.uri,
+      # qui a priorité sur host/port/scheme — seul SPRING_CLOUD_VAULT_URI le surcharge.
+      SPRING_CLOUD_VAULT_URI: http://vault:8200
       SPRING_CLOUD_VAULT_TOKEN: myroot
-      SPRING_CLOUD_VAULT_SCHEME: http
     depends_on:
       postgres:
         condition: service_healthy
       vault:
         condition: service_healthy
+      vault-init:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8080/actuator/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      # Large : couvre le premier démarrage sur base vierge (migration Liquibase complète)
+      start_period: 180s
     restart: on-failure
 
-
+  # Batch de génération des relevés (PDF → MinIO)
+  financial-batch:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: batch
+    container_name: financial-batch
+    ports:
+      - "8090:8090"
+    environment:
+      SPRING_PROFILES_ACTIVE: local
+      SERVER_PORT: 8090
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/financial_db
+      SPRING_DATASOURCE_USERNAME: financial_user
+      SPRING_DATASOURCE_PASSWORD: financial_pass
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_ACCESS_KEY: minioadmin
+      MINIO_SECRET_KEY: minioadmin
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8090/actuator/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+    restart: on-failure
 
   minio:
     image: minio/minio:latest
@@ -42,6 +81,26 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
+  # Seed du Vault dev (stockage en MÉMOIRE, vidé à chaque redémarrage du conteneur) :
+  # pousse la clé privée RSA depuis le fichier LOCAL GITIGNORÉ docker/vault/rsa-private-key.pem
+  # vers secret/financial-tracking-ws/rsa (clé rsa-private-key), puis se termine.
+  # Voir docker/vault/README.md pour déposer la clé.
+  vault-init:
+    image: hashicorp/vault:latest
+    container_name: financial-vault-init
+    environment:
+      VAULT_ADDR: http://vault:8200
+      VAULT_TOKEN: myroot
+    volumes:
+      - ./docker/vault:/seed:ro
+    # Attente active : l'ordre depends_on n'est pas garanti hors `docker compose up`
+    # (restart du démon Docker, `docker compose restart`), donc on retry jusqu'à ce que Vault réponde.
+    entrypoint: ["sh", "-c", "if [ ! -f /seed/rsa-private-key.pem ]; then echo 'ERREUR: docker/vault/rsa-private-key.pem introuvable — voir docker/vault/README.md'; exit 1; fi; until vault status > /dev/null 2>&1; do echo 'waiting for vault...'; sleep 2; done; vault kv put secret/financial-tracking-ws/rsa rsa-private-key=@/seed/rsa-private-key.pem"]
+    depends_on:
+      vault:
+        condition: service_healthy
+    restart: "no"
 
   vault:
     image: hashicorp/vault:latest
