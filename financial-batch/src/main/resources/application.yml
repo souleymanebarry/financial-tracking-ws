@@ -31,6 +31,20 @@ spring:
     enabled: false  # Schema métier géré par financial-persistence
 
 # =========================
+# Actuator — healthchecks
+# =========================
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      # Expose /actuator/health/liveness et /actuator/health/readiness
+      probes:
+        enabled: true
+
+# =========================
 # Batch scheduling
 # =========================
 batch:

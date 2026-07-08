@@ -40,17 +40,19 @@ spring:
   # =========================
   # Liquibase
   # =========================
+  # Migrations appliquées au démarrage : mono-instance, verrou DATABASECHANGELOGLOCK,
+  # échec de migration = démarrage bloqué (fail fast, détecté par le healthcheck).
   liquibase:
     change-log: classpath:db/changelog/db.changelog-master.yaml
-    enabled: false
+    enabled: true
 
 # =========================
 # Logging
 # =========================
 logging:
   level:
-    org.springframework.boot.autoconfigure.jdbc: DEBUG
-    org.springframework.security: TRACE
+    org.springframework.boot.autoconfigure.jdbc: WARN
+    org.springframework.security: WARN
 
 # =========================
 # Archive Service

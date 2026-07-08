@@ -8,7 +8,7 @@
     <parent>
         <groupId>com.barry.bank</groupId>
         <artifactId>financial-tracking-ws</artifactId>
-        <version>0.0.1-SNAPSHOT</version>
+        <version>${revision}</version>
     </parent>
 
     <artifactId>financial-api</artifactId>
@@ -19,6 +19,12 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <!-- Actuator (healthchecks liveness/readiness) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
 
         <!-- Security -->
@@ -54,13 +60,21 @@
         <dependency>
             <groupId>com.barry.bank</groupId>
             <artifactId>financial-test-support</artifactId>
-            <type>pom</type>
             <scope>test</scope>
         </dependency>
     </dependencies>
 
     <build>
         <plugins>
+            <!-- Exécutable distribué en image Docker (buildée depuis les sources) —
+                 le fat jar n'est pas publié sur GitHub Packages -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-deploy-plugin</artifactId>
+                <configuration>
+                    <skip>true</skip>
+                </configuration>
+            </plugin>
             <!-- Exécute les tests d'intégration (*IT) en phase integration-test/verify -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

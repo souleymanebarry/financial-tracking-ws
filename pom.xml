@@ -2,9 +2,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
-
 	<modelVersion>4.0.0</modelVersion>
-
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
@@ -14,8 +12,26 @@
 
 	<groupId>com.barry.bank</groupId>
 	<artifactId>financial-tracking-ws</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>${revision}</version>
 	<packaging>pom</packaging>
+
+	<scm>
+		<url>https://github.com/souleymanebarry/financial-tracking-ws</url>
+		<connection>scm:git:https://github.com/souleymanebarry/financial-tracking-ws.git</connection>
+		<developerConnection>scm:git:git@github.com:souleymanebarry/financial-tracking-ws.git</developerConnection>
+		<tag>HEAD</tag>
+	</scm>
+
+	<!-- Publication des artefacts sur GitHub Packages.
+	     Auth : server id "github" dans settings.xml (GITHUB_TOKEN en CI,
+	     PAT avec write:packages en local). -->
+	<distributionManagement>
+		<repository>
+			<id>github</id>
+			<name>GitHub Packages — souleymanebarry/financial-tracking-ws</name>
+			<url>https://maven.pkg.github.com/souleymanebarry/financial-tracking-ws</url>
+		</repository>
+	</distributionManagement>
 
 	<modules>
 		<module>financial-domain</module>
@@ -28,6 +44,8 @@
 	</modules>
 
 	<properties>
+		<!-- Version CI-friendly : la CI la fixe depuis le tag git (-Drevision=1.2.3), défaut en dev -->
+		<revision>0.0.1-SNAPSHOT</revision>
 		<java.version>17</java.version>
 		<lombok.version>1.18.28</lombok.version>
 		<mapstruct.version>1.5.5.Final</mapstruct.version>
@@ -37,6 +55,8 @@
 		<commons-collections4.version>4.5.0</commons-collections4.version>
 		<spring-cloud.version>2023.0.4</spring-cloud.version>
 		<jacoco.version>0.8.12</jacoco.version>
+		<!-- Override du BOM Spring Boot (1.19.8) : Docker Engine 29+ rejette le client docker-java des versions < 1.21.4 -->
+		<testcontainers.version>1.21.4</testcontainers.version>
 		<openapi.version>2.6.0</openapi.version>
 		<itext.version>7.2.6</itext.version>
 		<minio.version>8.5.10</minio.version>
@@ -73,11 +93,15 @@
 				<groupId>com.barry.bank</groupId>
 				<artifactId>financial-test-support</artifactId>
 				<version>${project.version}</version>
-				<type>pom</type>
 			</dependency>
 			<dependency>
 				<groupId>com.barry.bank</groupId>
 				<artifactId>financial-document</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.barry.bank</groupId>
+				<artifactId>financial-batch</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<!-- MAPSTRUCT -->
@@ -151,6 +175,33 @@
 
 	<build>
 		<plugins>
+
+			<!-- Résout ${revision} dans les POMs installés/déployés (versions CI-friendly) -->
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>flatten-maven-plugin</artifactId>
+				<version>1.6.0</version>
+				<configuration>
+					<updatePomFile>true</updatePomFile>
+					<flattenMode>resolveCiFriendliesOnly</flattenMode>
+				</configuration>
+				<executions>
+					<execution>
+						<id>flatten</id>
+						<phase>process-resources</phase>
+						<goals>
+							<goal>flatten</goal>
+						</goals>
+					</execution>
+					<execution>
+						<id>flatten.clean</id>
+						<phase>clean</phase>
+						<goals>
+							<goal>clean</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
 
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>

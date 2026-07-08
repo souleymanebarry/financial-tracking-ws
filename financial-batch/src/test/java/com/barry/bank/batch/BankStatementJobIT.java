@@ -29,7 +29,9 @@ import io.minio.MinioClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.test.context.ActiveProfiles;
+import org.testcontainers.containers.PostgreSQLContainer;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -41,6 +43,18 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest
 @ActiveProfiles("test")
 class BankStatementJobIT {
+
+    /**
+     * PostgreSQL Testcontainers — même pattern singleton que les ITs de financial-api :
+     * conteneur unique démarré une fois par JVM, {@code @ServiceConnection} injecte
+     * url/user/password dans le datasource.
+     */
+    @ServiceConnection
+    static final PostgreSQLContainer<?> POSTGRES = new PostgreSQLContainer<>("postgres:12.8");
+
+    static {
+        POSTGRES.start();
+    }
 
     @MockBean MinioClient minioClient;
 

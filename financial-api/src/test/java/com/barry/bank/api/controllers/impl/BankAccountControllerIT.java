@@ -1,16 +1,13 @@
 package com.barry.bank.api.controllers.impl;
 
+import com.barry.bank.api.AbstractIntegrationTest;
 import lombok.SneakyThrows;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.web.context.WebApplicationContext;
@@ -31,11 +28,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.setup.MockMvcBuilders.webAppContextSetup;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@ActiveProfiles("it")
-@Sql(scripts = {"classpath:scripts/schemaPostgres.sql", "classpath:scripts/dataPostgres.sql"})
-@AutoConfigureMockMvc
-class BankAccountControllerIT {
+class BankAccountControllerIT extends AbstractIntegrationTest {
 
     private MockMvc mockMvc;
 

@@ -8,7 +8,7 @@
     <parent>
         <groupId>com.barry.bank</groupId>
         <artifactId>financial-tracking-ws</artifactId>
-        <version>0.0.1-SNAPSHOT</version>
+        <version>${revision}</version>
     </parent>
 
     <artifactId>financial-persistence</artifactId>
@@ -43,7 +43,6 @@
         <dependency>
             <groupId>com.barry.bank</groupId>
             <artifactId>financial-test-support</artifactId>
-            <type>pom</type>
             <scope>test</scope>
         </dependency>
 

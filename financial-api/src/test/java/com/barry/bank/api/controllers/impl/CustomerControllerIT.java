@@ -1,20 +1,16 @@
 package com.barry.bank.api.controllers.impl;
 
+import com.barry.bank.api.AbstractIntegrationTest;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import lombok.SneakyThrows;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.cloud.contract.wiremock.AutoConfigureWireMock;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.annotation.Propagation;
@@ -38,12 +34,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.setup.MockMvcBuilders.webAppContextSetup;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@ActiveProfiles("it")
-@Sql(scripts = {"classpath:scripts/schemaPostgres.sql", "classpath:scripts/dataPostgres.sql"})
-@AutoConfigureMockMvc
-@AutoConfigureWireMock(port = 0)
-class CustomerControllerIT {
+class CustomerControllerIT extends AbstractIntegrationTest {
 
     private MockMvc mockMvc;
 

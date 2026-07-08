@@ -1,23 +1,24 @@
 spring:
-  datasource:
-    url: jdbc:h2:mem:batchtest;MODE=PostgreSQL;DB_CLOSE_DELAY=-1
-    driver-class-name: org.h2.Driver
-    username: sa
-    password:
+  # Datasource fourni par Testcontainers via @ServiceConnection (BankStatementJobIT) —
+  # aucune URL ni credentials en dur ici.
+
   jpa:
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: none
     show-sql: false
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.H2Dialect
+
   batch:
     jdbc:
+      # Tables de métadonnées Spring Batch créées au démarrage (conteneur vierge)
       initialize-schema: always
     job:
       enabled: false
+
+  # Schéma applicatif : changelog Liquibase IT partagé (financial-test-support),
+  # le même que celui des ITs de financial-api.
   liquibase:
-    enabled: false
+    enabled: true
+    change-log: classpath:/db/changelog/db.changelog-it.yaml
 
 batch:
   statement:
