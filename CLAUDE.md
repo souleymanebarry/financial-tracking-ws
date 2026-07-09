@@ -117,8 +117,12 @@ dev (in-memory — secrets are wiped on container restart, re-seeded by `vault-i
 volume runs the full Liquibase migration (~8-10 min); the api healthcheck `start_period` is 180s.
 
 **CI/CD: GitHub Actions + GHCR.** `.github/workflows/ci.yml` runs `./mvnw clean verify` on
-PRs and pushes to `develop`/`master` (JaCoCo reports uploaded as build artifact, no blocking
-threshold — nothing is published). On `vX.Y.Z` tags only, after verify: jars are deployed to
+PRs and pushes to `develop`/`master` (JaCoCo reports uploaded as build artifact — nothing is
+published), then a **non-blocking SonarCloud analysis** (`sonar:sonar`; quality gate results
+arrive via PR decoration + email, never fail the job). Sonar properties (`sonar.organization`,
+`sonar.projectKey`, JaCoCo XML report paths) live in the parent POM; JaCoCo reports are
+generated in `post-integration-test` so IT coverage is included. Setup and UI config:
+`docs/sonarcloud-setup.md`. On `vX.Y.Z` tags only, after verify: jars are deployed to
 GitHub Packages and both images are pushed to
 `ghcr.io/souleymanebarry/financial-tracking-ws/financial-{api,batch}` tagged `X.Y.Z` +
 `latest`, all with `-Drevision=X.Y.Z` (forwarded to the Docker build via the `REVISION`
