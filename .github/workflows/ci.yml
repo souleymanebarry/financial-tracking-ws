@@ -47,8 +47,11 @@ jobs:
             echo "revision=0.0.1-SNAPSHOT" >> "$GITHUB_OUTPUT"
           fi
 
+      # install (pas verify) : sonar:sonar tourne dans une seconde invocation Maven et
+      # résout les modules frères depuis le repo local — sans install, warnings
+      # "could not be resolved… seem to be part of the reactor" et classpath incomplet
       - name: Build and test
-        run: ./mvnw -B -ntp clean verify -Drevision=${{ steps.rev.outputs.revision }}
+        run: ./mvnw -B -ntp clean install -Drevision=${{ steps.rev.outputs.revision }}
 
       # Analyse SonarCloud — non bloquante : le job ne dépend pas du quality gate,
       # le résultat arrive en décoration de PR + notification email (configurée côté
