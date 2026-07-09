@@ -65,8 +65,10 @@
 		<sonar.host.url>https://sonarcloud.io</sonar.host.url>
 		<sonar.organization>souleymanebarry</sonar.organization>
 		<sonar.projectKey>souleymanebarry_financial-tracking-ws</sonar.projectKey>
-		<!-- Couverture : Sonar lit les rapports XML JaCoCo de tous les modules (générés en post-integration-test) -->
-		<sonar.coverage.jacoco.xmlReportPaths>${maven.multiModuleProjectDirectory}/**/target/site/jacoco/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
+		<!-- Couverture : le sensor JaCoCo de Sonar lit par défaut target/site/jacoco/jacoco.xml
+		     dans chaque module (généré en post-integration-test). Ne pas définir
+		     sonar.coverage.jacoco.xmlReportPaths en global avec un wildcard : chaque module
+		     importerait les rapports des autres (warnings "not found in project sources") -->
 	</properties>
 
 	<dependencyManagement>
