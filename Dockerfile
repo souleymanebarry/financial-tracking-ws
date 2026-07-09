@@ -20,7 +20,7 @@ COPY financial-batch/pom.xml          financial-batch/
 COPY financial-document/pom.xml       financial-document/
 
 # Resolve all dependencies (separate layer — rebuilt only when a POM changes)
-RUN ./mvnw dependency:go-offline -q
+RUN ./mvnw -B -ntp dependency:go-offline -q
 
 # Copy sources
 COPY financial-domain/src         financial-domain/src
@@ -36,7 +36,7 @@ COPY financial-document/src       financial-document/src
 ARG REVISION=0.0.1-SNAPSHOT
 
 # Build + extract Spring Boot layers for both executables (tests run separately in CI)
-RUN ./mvnw clean package -pl financial-api,financial-batch -am -DskipTests -Drevision=${REVISION} -q && \
+RUN ./mvnw -B -ntp clean package -pl financial-api,financial-batch -am -DskipTests -Drevision=${REVISION} -q && \
     java -Djarmode=layertools \
          -jar financial-api/target/financial-api-*.jar \
          extract --destination financial-api/target/extracted && \
