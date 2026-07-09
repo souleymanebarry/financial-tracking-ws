@@ -51,9 +51,10 @@ L'email part à l'adresse du compte GitHub associé.
 
 - Le job `verify` fait un checkout `fetch-depth: 0` (historique complet requis pour le
   blame et la détection du *new code*), build `clean verify`, puis `sonar:sonar`.
-- La couverture vient des rapports XML JaCoCo de tous les modules
-  (`sonar.coverage.jacoco.xmlReportPaths`), générés en phase `post-integration-test`
-  pour inclure les tests d'intégration failsafe en plus des tests unitaires.
+- La couverture vient du rapport XML JaCoCo de chaque module
+  (`target/site/jacoco/jacoco.xml`, chemin par défaut du sensor Sonar), généré en phase
+  `post-integration-test` pour inclure les tests d'intégration failsafe en plus des
+  tests unitaires.
 - L'étape ne tourne **ni sur les tags** (le code a déjà été analysé sur la branche),
   **ni pour dependabot** (ses PRs n'ont pas accès au secret `BANK_WS_SONAR_TOKEN`).
 - Le plugin `sonar-maven-plugin` est pinné dans le `pom.xml` parent
