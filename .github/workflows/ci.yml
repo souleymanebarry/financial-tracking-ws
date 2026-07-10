@@ -8,49 +8,160 @@ on:
     branches: [develop, master]
   workflow_dispatch:
 
+# Jamais annuler un run de release (tag) en cours ; les branches/PR restent annulables
 concurrency:
   group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.ref_type != 'tag' }}
 
 jobs:
   # PR + push develop/master : build + tests (unit + IT Testcontainers), rien n'est publié
   verify:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      checks: write # annotations JUnit dans l'onglet Checks
+      pull-requests: read # SonarCloud lit les infos de la PR pour l'analyse
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          # Historique complet requis par SonarCloud (blame + détection du nouveau code)
+          fetch-depth: 0
 
       - name: Set up JDK 17
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@0f481fcb613427c0f801b606911222b5b6f3083a # v5.5.0
         with:
           distribution: temurin
           java-version: "17"
           cache: maven
 
-      - name: Build and test
-        run: ./mvnw clean verify
+      # Sur un tag vX.Y.Z, verify construit et teste la version exacte qui sera publiée ;
+      # sinon on garde la version par défaut du parent POM
+      - name: Compute Maven revision
+        id: rev
+        run: |
+          if [ "$GITHUB_REF_TYPE" = "tag" ]; then
+            echo "revision=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+          else
+            echo "revision=0.0.1-SNAPSHOT" >> "$GITHUB_OUTPUT"
+          fi
 
-      # Rapports JaCoCo (générés en phase test par le parent POM) — informatif, aucun seuil bloquant
+      # install (pas verify) : sonar:sonar tourne dans une seconde invocation Maven et
+      # résout les modules frères depuis le repo local — sans install, warnings
+      # "could not be resolved… seem to be part of the reactor" et classpath incomplet
+      - name: Build and test
+        run: ./mvnw -B -ntp clean install -Drevision=${{ steps.rev.outputs.revision }}
+
+      # Analyse SonarCloud — non bloquante : le job ne dépend pas du quality gate,
+      # le résultat arrive en décoration de PR + notification email (configurée côté
+      # SonarCloud, My Account → Notifications). Pas sur les tags (déjà analysé sur la
+      # branche) ni pour dependabot (ses PRs n'ont pas accès aux secrets).
+      - name: SonarCloud analysis
+        if: github.ref_type != 'tag' && github.actor != 'dependabot[bot]'
+        env:
+          SONAR_TOKEN: ${{ secrets.BANK_WS_SONAR_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # infos PR pour la décoration
+        run: >-
+          ./mvnw -B -ntp sonar:sonar
+          -Drevision=${{ steps.rev.outputs.revision }}
+
+      # Échecs de tests publiés en annotations dans l'onglet Checks — les stacktraces
+      # sont lisibles directement dans la PR, sans télécharger l'artifact
+      - name: Publish test report annotations
+        if: always()
+        uses: mikepenz/action-junit-report@d9f48fc87bc235f7e214acf696ca5abc0a986f16 # v6.4.2
+        with:
+          # un seul glob (couvre surefire-reports et failsafe-reports) :
+          # plusieurs lignes = plusieurs checks, exigeant autant de check_name
+          report_paths: "**/target/*-reports/TEST-*.xml"
+
+      # Rapports surefire/failsafe pour diagnostiquer les tests en échec
+      - name: Upload test reports
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: test-reports
+          path: |
+            **/target/surefire-reports/**
+            **/target/failsafe-reports/**
+          if-no-files-found: ignore
+
+      # Rapports JaCoCo (générés en post-integration-test par le parent POM, unit + IT) —
+      # artifact informatif ; le seuil bloquant est porté par le quality gate SonarCloud
       - name: Upload JaCoCo reports
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: jacoco-reports
           path: "**/target/site/jacoco/**"
           if-no-files-found: ignore
+
+  # PR uniquement : échoue si la PR introduit une dépendance avec une vulnérabilité
+  # connue (compare le graphe de dépendances base ↔ head via l'API GitHub)
+  dependency-review:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Dependency review
+        uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
+        with:
+          fail-on-severity: high
+
+  # PR + push branches : valide que le Dockerfile construit toujours (rien n'est poussé).
+  # Sans ça, un Dockerfile cassé ne serait découvert qu'au moment d'une release.
+  # Inutile sur un tag : publish fait le vrai build+push.
+  docker-build:
+    if: github.ref_type != 'tag'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
+
+      # Les deux cibles partagent le stage builder : le second build est quasi gratuit
+      - name: Build financial-api image (no push)
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        with:
+          context: .
+          target: api
+          push: false
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build financial-batch image (no push)
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        with:
+          context: .
+          target: batch
+          push: false
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
   # Tag vX.Y.Z uniquement : jars → GitHub Packages, images api/batch → GHCR
   publish:
     if: github.ref_type == 'tag'
     needs: verify
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     permissions:
-      contents: read
+      contents: write # création de la GitHub Release
       packages: write
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
       # Version Maven CI-friendly dérivée du tag vX.Y.Z
       - name: Compute Maven revision
@@ -60,7 +171,7 @@ jobs:
       # server-id "github" = <distributionManagement> du parent POM ;
       # setup-java génère le settings.xml (credentials via GITHUB_ACTOR/GITHUB_TOKEN)
       - name: Set up JDK 17
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@0f481fcb613427c0f801b606911222b5b6f3083a # v5.5.0
         with:
           distribution: temurin
           java-version: "17"
@@ -68,15 +179,15 @@ jobs:
           server-id: github
 
       - name: Deploy jars to GitHub Packages
-        run: ./mvnw deploy -DskipTests -Drevision=${{ steps.rev.outputs.revision }}
+        run: ./mvnw -B -ntp deploy -DskipTests -Drevision=${{ steps.rev.outputs.revision }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
 
       - name: Log in to GHCR
-        uses: docker/login-action@v3
+        uses: docker/login-action@af1e73f918a031802d376d3c8bbc3fe56130a9b0 # v4.4.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -84,14 +195,14 @@ jobs:
 
       - name: Docker metadata (financial-api)
         id: meta-api
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
         with:
           images: ghcr.io/${{ github.repository }}/financial-api
           tags: type=semver,pattern={{version}}
 
       - name: Docker metadata (financial-batch)
         id: meta-batch
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
         with:
           images: ghcr.io/${{ github.repository }}/financial-batch
           tags: type=semver,pattern={{version}}
@@ -99,11 +210,13 @@ jobs:
       # Les deux cibles partagent le stage builder : le second build
       # réutilise les couches du premier via le cache GitHub Actions.
       - name: Build and push financial-api image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
         with:
           context: .
           target: api
           push: true
+          provenance: true
+          sbom: true
           build-args: REVISION=${{ steps.rev.outputs.revision }}
           tags: ${{ steps.meta-api.outputs.tags }}
           labels: ${{ steps.meta-api.outputs.labels }}
@@ -111,13 +224,22 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Build and push financial-batch image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
         with:
           context: .
           target: batch
           push: true
+          provenance: true
+          sbom: true
           build-args: REVISION=${{ steps.rev.outputs.revision }}
           tags: ${{ steps.meta-batch.outputs.tags }}
           labels: ${{ steps.meta-batch.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      # En dernier : la Release n'est créée que si jars et images ont bien été publiés.
+      # --generate-notes : notes générées depuis les commits/PR depuis le tag précédent.
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" --verify-tag --generate-notes

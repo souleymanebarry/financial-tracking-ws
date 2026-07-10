@@ -60,6 +60,15 @@
 		<openapi.version>2.6.0</openapi.version>
 		<itext.version>7.2.6</itext.version>
 		<minio.version>8.5.10</minio.version>
+		<sonar-maven-plugin.version>5.1.0.4751</sonar-maven-plugin.version>
+		<!-- SonarCloud : analyse lancée depuis la racine du réacteur (mvn sonar:sonar en CI) -->
+		<sonar.host.url>https://sonarcloud.io</sonar.host.url>
+		<sonar.organization>souleymanebarry</sonar.organization>
+		<sonar.projectKey>souleymanebarry_financial-tracking-ws</sonar.projectKey>
+		<!-- Couverture : le sensor JaCoCo de Sonar lit par défaut target/site/jacoco/jacoco.xml
+		     dans chaque module (généré en post-integration-test). Ne pas définir
+		     sonar.coverage.jacoco.xmlReportPaths en global avec un wildcard : chaque module
+		     importerait les rapports des autres (warnings "not found in project sources") -->
 	</properties>
 
 	<dependencyManagement>
@@ -239,12 +248,19 @@
 					</execution>
 					<execution>
 						<id>report</id>
-						<phase>test</phase>
+						<!-- post-integration-test (pas test) : le rapport XML inclut aussi la couverture
+						     des ITs failsafe, qui écrivent dans le même jacoco.exec via ${argLine} -->
+						<phase>post-integration-test</phase>
 						<goals>
 							<goal>report</goal>
 						</goals>
 					</execution>
 				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.sonarsource.scanner.maven</groupId>
+				<artifactId>sonar-maven-plugin</artifactId>
+				<version>${sonar-maven-plugin.version}</version>
 			</plugin>
 		</plugins>
 	</build>
