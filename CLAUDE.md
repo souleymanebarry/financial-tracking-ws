@@ -116,7 +116,7 @@ dev (in-memory — secrets are wiped on container restart, re-seeded by `vault-i
 `docker compose up`), MinIO, api and batch with actuator healthchecks. First boot on a fresh
 volume runs the full Liquibase migration (~8-10 min); the api healthcheck `start_period` is 180s.
 
-**CI/CD: GitHub Actions + GHCR.** `.github/workflows/ci.yml` runs `./mvnw clean verify` on
+**CI/CD: GitHub Actions + GHCR.** `.github/workflows/ci-cd.yml` runs `./mvnw clean verify` on
 PRs and pushes to `develop`/`master` (JaCoCo reports uploaded as build artifact — nothing is
 published), then a **non-blocking SonarCloud analysis** (`sonar:sonar`; quality gate results
 arrive via PR decoration + email, never fail the job). Sonar properties (`sonar.organization`,
