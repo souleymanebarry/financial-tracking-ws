@@ -126,7 +126,9 @@ generated in `post-integration-test` so IT coverage is included. Setup and UI co
 GitHub Packages and both images are pushed to
 `ghcr.io/souleymanebarry/financial-tracking-ws/financial-{api,batch}` tagged `X.Y.Z` +
 `latest`, all with `-Drevision=X.Y.Z` (forwarded to the Docker build via the `REVISION`
-build-arg). No SNAPSHOT is ever published.
+build-arg). No SNAPSHOT is ever published; GitHub Releases are manual and milestone-only.
+Deployment strategy (Render staging/preprod/prod, promotion flow, expand/contract Liquibase
+rule, rollback): `docs/ci-cd-strategy.md`.
 
 ## Migration Context
 
