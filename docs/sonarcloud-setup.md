@@ -1,7 +1,7 @@
 # SonarCloud — intégration et configuration
 
 Analyse de qualité du code sur chaque PR et chaque push `develop`/`master`, pilotée par la CI
-(`sonar:sonar` dans le job `verify` de `.github/workflows/ci.yml`). L'analyse est
+(`sonar:sonar` dans le job `verify` de `.github/workflows/ci-cd.yml`). L'analyse est
 **non bloquante** : le job ne dépend pas du quality gate ; le résultat arrive en décoration
 de PR et par notification email.
 
