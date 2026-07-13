@@ -53,7 +53,8 @@ logging:
     org.springframework.security: WARN
 
 # =========================
-# Archive Service — simulé en staging (modalité : spike #46)
+# Archive Service — simulé en staging : WireMock standalone en service Render dédié
+# (image docker/wiremock-archive/, décision #46). L'URL du stub arrive par env var.
 # =========================
 archive:
   service:
@@ -67,7 +68,8 @@ rsa:
   public-key: ${RSA_PUBLICKEY}
 
 # =========================
-# SpringDoc (OPENAPI) — activé en staging, contrairement à prod (à confirmer en #47)
+# SpringDoc (OPENAPI) — activé en staging (décision #47) : l'environnement sert à la
+# validation fonctionnelle rapide, Swagger UI en fait partie. Désactivé en prod uniquement.
 # =========================
 springdoc:
   api-docs:
