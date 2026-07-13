@@ -31,7 +31,7 @@ le backlog d'implémentation vit dans le GitHub Project
 
 | Composant | Staging | Pré-production | Production |
 |---|---|---|---|
-| Service d'archivage | **Simulé** — modalité à trancher (spike #46) | Simulé en v1 — écart avec la prod assumé et documenté ici | **Réel** |
+| Service d'archivage | **Simulé** — WireMock standalone en service Render dédié, image `docker/wiremock-archive/` (décision #46) | Simulé en v1 (même stub WireMock) — écart avec la prod assumé | **Réel** |
 | Batch (relevés bancaires) | **Désactivé** | **Désactivé** (v1) | Hors périmètre v1 (voir #60) |
 | Stockage objet (MinIO/S3) | Absent (inutile sans batch) | Absent (v1) | Hors périmètre v1 — décision R2/S3/B2 à prendre avec le batch (#60) |
 | Vault | **Absent** — secrets via env vars / secret files Render (spike #45) | Absent — même mécanique que staging | À trancher au provisionnement (#58) : même mécanique Render, ou Vault managé |

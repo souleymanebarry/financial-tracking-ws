@@ -1,0 +1,28 @@
+# Stub WireMock — service d'archivage (staging)
+
+Simulation du service d'archivage externe pour l'environnement de **staging**
+(décision : spike [#46](https://github.com/souleymanebarry/financial-tracking-ws/issues/46) ;
+stratégie : `docs/ci-cd-strategy.md`, matrice réel/simulé).
+
+- **Stub servi** : `POST /api/v1/archives/customers` (avec `Authorization: Bearer …`)
+  → `201 {"status":"ARCHIVED"}` — version relâchée du stub des ITs (`CustomerControllerIT`) :
+  pas de match sur le body pour ne pas coupler le stub aux données de staging.
+- **Réponse non stubbée** (mauvaise URL, header absent) → `404` WireMock → côté API,
+  `ArchiveServiceException` et la suppression de client échoue : comportement identique
+  à une vraie panne du service d'archivage.
+- **Observabilité** : `GET /__admin/requests` liste les appels reçus (vérification de la
+  checklist staging #50). Suspendre le service = simuler l'indisponibilité de l'archivage.
+
+## Test local
+
+```bash
+docker build -t wiremock-archive docker/wiremock-archive
+docker run --rm -p 8085:8080 wiremock-archive
+
+# 201 attendu :
+curl -i -X POST http://localhost:8085/api/v1/archives/customers \
+  -H "Authorization: Bearer test" -H "Content-Type: application/json" -d '{}'
+```
+
+Le port d'écoute suit la variable `PORT` (convention Render), 8080 par défaut.
+L'URL du service est injectée dans l'API staging via `ARCHIVE_SERVICE_URL` (profil `staging`, spike #45).
