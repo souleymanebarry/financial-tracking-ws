@@ -1,0 +1,80 @@
+# =========================================================================
+# Profil staging (Render) — issu du spike #45
+# Sans Vault : les secrets arrivent par l'environnement du service Render.
+#   - RSA_PRIVATE_KEY : contenu PEM PKCS8 de la clé privée (env var multiligne)
+#   - RSA_PUBLICKEY   : resource Spring vers la clé publique (secret file Render,
+#                       ex. file:/etc/secrets/rsa-public.pem)
+# Keypair staging dédié — ne jamais réutiliser les certs de dev committés.
+# =========================================================================
+spring:
+  application:
+    name: financial-tracking-ws
+
+  # Pas de spring.config.import: vault:// ici — Vault n'existe pas sur Render.
+  # enabled: false en ceinture-bretelles (le starter est sur le classpath).
+  cloud:
+    vault:
+      enabled: false
+
+  # =========================
+  # DataSource (PostgreSQL Render)
+  # =========================
+  # Render fournit une URL au format postgres://user:pass@host/db :
+  # à convertir en JDBC et à éclater dans les trois variables ci-dessous.
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME} # postgres username
+    password: ${SPRING_DATASOURCE_PASSWORD} # postgres password
+
+  # =========================
+  # JPA / Hibernate
+  # =========================
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: none
+    show-sql: false
+
+  # =========================
+  # Liquibase
+  # =========================
+  # Migrations au démarrage, comme en prod (mono-instance, fail fast).
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+    enabled: true
+
+# =========================
+# Logging
+# =========================
+logging:
+  level:
+    org.springframework.boot.autoconfigure.jdbc: WARN
+    org.springframework.security: WARN
+
+# =========================
+# Archive Service — simulé en staging (modalité : spike #46)
+# =========================
+archive:
+  service:
+    url: ${ARCHIVE_SERVICE_URL}
+
+# =========================
+# RSA
+# =========================
+rsa:
+  private-key: ${RSA_PRIVATE_KEY}
+  public-key: ${RSA_PUBLICKEY}
+
+# =========================
+# SpringDoc (OPENAPI) — activé en staging, contrairement à prod (à confirmer en #47)
+# =========================
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
+# Render injecte PORT (10000 par défaut pour un service Docker)
+server:
+  port: ${PORT:8080}
