@@ -38,3 +38,6 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# Keypair et scripts du POC staging (spike #45) — jamais committés
+staging-poc/

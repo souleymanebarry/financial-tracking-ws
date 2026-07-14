@@ -1,4 +1,4 @@
-name: CI
+name: CI-CD
 
 on:
   push:
@@ -149,14 +149,16 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-  # Tag vX.Y.Z uniquement : jars → GitHub Packages, images api/batch → GHCR
+  # Tag vX.Y.Z uniquement : jars → GitHub Packages, images api/batch → GHCR.
+  # Pas de GitHub Release automatique : réservées aux jalons, créées à la main
+  # (gh release create vX.Y.Z --verify-tag --generate-notes)
   publish:
     if: github.ref_type == 'tag'
     needs: verify
     runs-on: ubuntu-latest
     timeout-minutes: 20
     permissions:
-      contents: write # création de la GitHub Release
+      contents: read
       packages: write
 
     steps:
@@ -236,10 +238,3 @@ jobs:
           labels: ${{ steps.meta-batch.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-
-      # En dernier : la Release n'est créée que si jars et images ont bien été publiés.
-      # --generate-notes : notes générées depuis les commits/PR depuis le tag précédent.
-      - name: Create GitHub Release
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: gh release create "$GITHUB_REF_NAME" --verify-tag --generate-notes

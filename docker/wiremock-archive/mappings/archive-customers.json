@@ -1,0 +1,19 @@
+{
+  "name": "Archive customer (staging stub)",
+  "request": {
+    "method": "POST",
+    "urlPath": "/api/v1/archives/customers",
+    "headers": {
+      "Authorization": { "matches": "Bearer .*" },
+      "Content-Type": { "contains": "application/json" }
+    }
+  },
+  "response": {
+    "status": 201,
+    "headers": { "Content-Type": "application/json" },
+    "jsonBody": {
+      "status": "ARCHIVED",
+      "message": "Customer archived successfully (staging stub)"
+    }
+  }
+}

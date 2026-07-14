@@ -73,9 +73,9 @@ git tag in CI). Never hardcode module versions.
 
 **MapStruct for DTO mapping.** Mappers live in `financial-api/.../mappers/`. `AccountDTO` is a single flat DTO for both account types, discriminated by `accountType`; `AccountMapper` fills the type-specific fields (`overDraft`/`interestRate`) in an `@AfterMapping`. The account type labels live in the `AccountType` enum (`financial-domain`), single source of truth for `@DiscriminatorValue`, API values and the archive payload. All mappers use `unmappedTargetPolicy = ReportingPolicy.ERROR` — unmapped fields must be explicitly `ignore`d. Lombok + MapStruct annotation processors are configured together in the compiler plugin — order matters.
 
-**JWT with RSA keys.** Security uses asymmetric RSA (not HMAC256). The private key comes from Spring Cloud Vault (`secret/financial-tracking-ws/rsa`, key `rsa-private-key`, PKCS8 PEM content) in `local`/`prod`; the public key is a classpath/file resource (`rsa.public-key`). In docker-compose, the `vault-init` service seeds a dev keypair from `docker/dev-certs/` (never use in prod). `KeyUtils.java` parses the PEM; `RsaKeyProperties` binds the public key.
+**JWT with RSA keys.** Security uses asymmetric RSA (not HMAC256). The private key comes from Spring Cloud Vault (`secret/financial-tracking-ws/rsa`, key `rsa-private-key`, PKCS8 PEM content) in `local`/`prod`, and from the `RSA_PRIVATE_KEY` env var (PEM content, flattened OK) in `staging`; the public key is a classpath/file resource (`rsa.public-key`). In docker-compose, the `vault-init` service seeds a dev keypair from `docker/dev-certs/` (never use in prod). `KeyUtils.java` parses the PEM; `RsaKeyProperties` binds the public key.
 
-**Database migrations via Liquibase — `financial-persistence` is the single owner.** Master file: `db.changelog-master.yaml`. DDL scripts `DDL/001–007` (007 = Spring Batch metadata tables, guarded by a `MARK_RAN` precondition), DML data scripts `DML/001–186`. Add new changesets by incrementing the sequence. Liquibase runs at startup of `financial-api` in `local` **and** `prod`; `financial-batch` never migrates (`initialize-schema: never` in prod, `always` only in its test profile).
+**Database migrations via Liquibase — `financial-persistence` is the single owner.** Master file: `db.changelog-master.yaml`. DDL scripts `DDL/001–007` (007 = Spring Batch metadata tables, guarded by a `MARK_RAN` precondition), DML data scripts `DML/001–186`. Add new changesets by incrementing the sequence. Liquibase runs at startup of `financial-api` in `local`, `staging` **and** `prod`; `financial-batch` never migrates (`initialize-schema: never` in prod, `always` only in its test profile).
 
 **External archive service** is called via Spring `RestClient` (not `RestTemplate` or Feign). The client is in `financial-api/.../archive/sync/client/ArchiveCustomer.java`. WireMock stubs this in integration tests via `@AutoConfigureWireMock`.
 
@@ -99,12 +99,13 @@ Test profiles and their datasources:
 | Profile | Use case | Vault | DB |
 |---|---|---|---|
 | `local` | Local dev | enabled | PostgreSQL |
+| `staging` | Render staging (`financial-api` only, batch not deployed) | **disabled** — secrets via env vars (`RSA_PRIVATE_KEY` PEM content, `RSA_PUBLICKEY` file resource), archive service is a WireMock stub (`ARCHIVE_SERVICE_URL`) | PostgreSQL Render (env vars), Liquibase at startup |
 | `prod` | Production | enabled | PostgreSQL (env vars), Liquibase at startup, logs WARN |
 | `h2` | Persistence tests | disabled | H2 in-memory |
 | `it` | API integration tests | disabled | Testcontainers PostgreSQL |
 | `test` | Batch integration test | disabled | Testcontainers PostgreSQL |
 
-Swagger UI is **disabled in `prod`** profile. CSRF is enabled for Swagger in prod.
+Swagger UI is **disabled in `prod`** profile (enabled in `staging` — decision #47). CSRF is enabled for Swagger in prod.
 
 ## Docker
 
@@ -116,7 +117,7 @@ dev (in-memory — secrets are wiped on container restart, re-seeded by `vault-i
 `docker compose up`), MinIO, api and batch with actuator healthchecks. First boot on a fresh
 volume runs the full Liquibase migration (~8-10 min); the api healthcheck `start_period` is 180s.
 
-**CI/CD: GitHub Actions + GHCR.** `.github/workflows/ci.yml` runs `./mvnw clean verify` on
+**CI/CD: GitHub Actions + GHCR.** `.github/workflows/ci-cd.yml` runs `./mvnw clean verify` on
 PRs and pushes to `develop`/`master` (JaCoCo reports uploaded as build artifact — nothing is
 published), then a **non-blocking SonarCloud analysis** (`sonar:sonar`; quality gate results
 arrive via PR decoration + email, never fail the job). Sonar properties (`sonar.organization`,
@@ -126,7 +127,9 @@ generated in `post-integration-test` so IT coverage is included. Setup and UI co
 GitHub Packages and both images are pushed to
 `ghcr.io/souleymanebarry/financial-tracking-ws/financial-{api,batch}` tagged `X.Y.Z` +
 `latest`, all with `-Drevision=X.Y.Z` (forwarded to the Docker build via the `REVISION`
-build-arg). No SNAPSHOT is ever published.
+build-arg). No SNAPSHOT is ever published; GitHub Releases are manual and milestone-only.
+Deployment strategy (Render staging/preprod/prod, promotion flow, expand/contract Liquibase
+rule, rollback): `docs/ci-cd-strategy.md`.
 
 ## Migration Context
 
