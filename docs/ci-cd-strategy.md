@@ -78,7 +78,8 @@ GitHub Environment (`staging`, `preprod`, `production`) — #57.
 
 ## Migrations Liquibase — règle expand/contract
 
-Liquibase s'exécute au démarrage de `financial-api` dans tous les environnements déployés.
+Liquibase s'exécute au démarrage de `financial-api` dans les environnements déployés,
+**à l'exception du staging** (voir encadré ci-dessous).
 Le rollback se faisant par **redéploiement de l'image N-1 sur une base déjà migrée en N**,
 toute migration doit rester compatible avec la version applicative précédente :
 
@@ -92,6 +93,24 @@ toute migration doit rester compatible avec la version applicative précédente 
 
 **Cette règle est une exigence de revue de code** : sans elle, la stratégie de rollback
 ci-dessous est illusoire. Cas limites et procédure détaillée : runbook de rollback (#59).
+
+> **Exception staging (contrainte free tier — #48).** Le parsing du changelog (~646 Mo
+> de scripts DML) exige plus de 1 Go de heap : impossible dans l'instance Render 512 Mo
+> (OOM au boot, même sans changeset à appliquer). En staging, `spring.liquibase.enabled: false` ;
+> la base est gérée par **re-seed** depuis la base locale migrée (docker compose) :
+>
+> ```bash
+> docker exec financial-postgres pg_dump -U financial_user -Fc --no-owner --no-privileges financial_db > staging-seed.dump
+> docker exec -i financial-postgres pg_restore -d "$RENDER_EXTERNAL_URL" \
+>   --no-owner --no-privileges --clean --if-exists --single-transaction < staging-seed.dump
+> ```
+>
+> Une seule procédure couvre trois cas : le seed initial, l'arrivée de nouveaux changesets
+> (appliqués localement par le compose, puis re-seed) et l'expiration de la base Free (30 j).
+> **Correctif de fond au backlog** : squasher les DML en baseline (le changelog ne garde que
+> le schéma, les données deviennent un seed pg_dump officiel) — il conditionne aussi le
+> dimensionnement mémoire de la préprod et de la prod, et la taille de l'image (~244 Mo de
+> jar dont l'essentiel est du SQL embarqué). Le volume de données en base est inchangé.
 
 ## Stratégie de rollback (v1 : manuelle)
 

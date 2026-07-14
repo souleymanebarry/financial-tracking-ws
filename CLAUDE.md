@@ -75,7 +75,7 @@ git tag in CI). Never hardcode module versions.
 
 **JWT with RSA keys.** Security uses asymmetric RSA (not HMAC256). The private key comes from Spring Cloud Vault (`secret/financial-tracking-ws/rsa`, key `rsa-private-key`, PKCS8 PEM content) in `local`/`prod`, and from the `RSA_PRIVATE_KEY` env var (PEM content, flattened OK) in `staging`; the public key is a classpath/file resource (`rsa.public-key`). In docker-compose, the `vault-init` service seeds a dev keypair from `docker/dev-certs/` (never use in prod). `KeyUtils.java` parses the PEM; `RsaKeyProperties` binds the public key.
 
-**Database migrations via Liquibase — `financial-persistence` is the single owner.** Master file: `db.changelog-master.yaml`. DDL scripts `DDL/001–007` (007 = Spring Batch metadata tables, guarded by a `MARK_RAN` precondition), DML data scripts `DML/001–186`. Add new changesets by incrementing the sequence. Liquibase runs at startup of `financial-api` in `local`, `staging` **and** `prod`; `financial-batch` never migrates (`initialize-schema: never` in prod, `always` only in its test profile).
+**Database migrations via Liquibase — `financial-persistence` is the single owner.** Master file: `db.changelog-master.yaml`. DDL scripts `DDL/001–007` (007 = Spring Batch metadata tables, guarded by a `MARK_RAN` precondition), DML data scripts `DML/001–186`. Add new changesets by incrementing the sequence. Liquibase runs at startup of `financial-api` in `local` **and** `prod` (not `staging` — the 646MB changelog needs >1GB heap to parse, see `docs/ci-cd-strategy.md`); `financial-batch` never migrates (`initialize-schema: never` in prod, `always` only in its test profile).
 
 **External archive service** is called via Spring `RestClient` (not `RestTemplate` or Feign). The client is in `financial-api/.../archive/sync/client/ArchiveCustomer.java`. WireMock stubs this in integration tests via `@AutoConfigureWireMock`.
 
@@ -99,7 +99,7 @@ Test profiles and their datasources:
 | Profile | Use case | Vault | DB |
 |---|---|---|---|
 | `local` | Local dev | enabled | PostgreSQL |
-| `staging` | Render staging (`financial-api` only, batch not deployed) | **disabled** — secrets via env vars (`RSA_PRIVATE_KEY` PEM content, `RSA_PUBLICKEY` file resource), archive service is a WireMock stub (`ARCHIVE_SERVICE_URL`) | PostgreSQL Render (env vars), Liquibase at startup |
+| `staging` | Render staging (`financial-api` only, batch not deployed) | **disabled** — secrets via env vars (`RSA_PRIVATE_KEY` PEM content, `RSA_PUBLICKEY` file resource), archive service is a WireMock stub (`ARCHIVE_SERVICE_URL`) | PostgreSQL Render (env vars), **Liquibase disabled** — DB seeded via pg_dump from the migrated local compose DB (512MB instance can't parse the 646MB changelog, see #48 / `docs/ci-cd-strategy.md`) |
 | `prod` | Production | enabled | PostgreSQL (env vars), Liquibase at startup, logs WARN |
 | `h2` | Persistence tests | disabled | H2 in-memory |
 | `it` | API integration tests | disabled | Testcontainers PostgreSQL |

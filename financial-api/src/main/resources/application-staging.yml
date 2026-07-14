@@ -37,12 +37,15 @@ spring:
     show-sql: false
 
   # =========================
-  # Liquibase
+  # Liquibase — DÉSACTIVÉ en staging (voir #48)
   # =========================
-  # Migrations au démarrage, comme en prod (mono-instance, fail fast).
+  # Le parsing du changelog (~646 Mo de scripts DML) exige >1 Go de heap, incompatible
+  # avec l'instance Render 512 Mo — OOM au boot même sans changeset à appliquer.
+  # Le schéma staging est géré par re-seed pg_dump/pg_restore depuis la base locale
+  # migrée (procédure : docs/ci-cd-strategy.md). Correctif de fond : squash des DML
+  # en baseline (ticket dédié).
   liquibase:
-    change-log: classpath:db/changelog/db.changelog-master.yaml
-    enabled: true
+    enabled: false
 
 # =========================
 # Logging
