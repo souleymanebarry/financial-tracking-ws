@@ -149,6 +149,29 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+  # Push master (hors tag) : déclenche le déploiement staging via le deploy hook Render,
+  # uniquement si verify ET docker-build sont verts (Render rebuilde le Dockerfile depuis
+  # le dépôt — inutile de lancer un build qu'on sait cassé). L'auto-deploy Render est
+  # désactivé (#48) : la CI est l'unique déclencheur — alternative « wait for CI » de
+  # Render écartée (réglage côté dashboard, invisible dans le repo, moins auditable).
+  # Le hook est fire-and-forget : le suivi du déploiement se fait côté Render
+  # (healthcheck /actuator/health) ; les smoke tests automatisés arrivent avec #55.
+  deploy-staging:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    needs: [verify, docker-build]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    environment:
+      name: staging
+      url: https://financial-api-staging.onrender.com
+    steps:
+      - name: Trigger Render deploy hook
+        env:
+          DEPLOY_HOOK: ${{ secrets.RENDER_STAGING_DEPLOY_HOOK }}
+        run: curl -fsS -o /dev/null -w "deploy hook accepted (HTTP %{http_code})\n" "$DEPLOY_HOOK"
+
   # Tag vX.Y.Z uniquement : jars → GitHub Packages, images api/batch → GHCR.
   # Pas de GitHub Release automatique : réservées aux jalons, créées à la main
   # (gh release create vX.Y.Z --verify-tag --generate-notes)
