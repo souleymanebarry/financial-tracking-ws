@@ -71,10 +71,18 @@ Approbation manuelle (GitHub Environment `production`, required reviewers)
    PRODUCTION       La même image GHCR X.Y.Z
 ```
 
-Mise en œuvre dans `.github/workflows/ci-cd.yml` : `verify` et `publish` existent ;
-`deploy-staging` (#49), `deploy-preprod` (#54), `smoke-preprod` (#55) et `deploy-prod` (#58)
-arrivent avec les épics correspondantes. Les secrets de déploiement sont rangés par
-GitHub Environment (`staging`, `preprod`, `production`) — #57.
+Mise en œuvre dans `.github/workflows/ci-cd.yml` : `verify`, `publish` et `deploy-staging`
+existent (`deploy-staging` : push `master` hors tag, `needs: verify + docker-build`, appel du
+deploy hook Render — secret `RENDER_STAGING_DEPLOY_HOOK`, l'auto-deploy Render étant désactivé) ;
+`deploy-preprod` (#54), `smoke-preprod` (#55) et `deploy-prod` (#58) arrivent avec les épics
+correspondantes. Les secrets de déploiement sont rangés par GitHub Environment (`staging`,
+`preprod`, `production`) — #57.
+
+Environnement staging provisionné (#48) : PostgreSQL Render **16.x** — écart assumé avec le
+12.8 de dev/IT (Render ne propose plus la 12) — en plan **Free** (expiration 30 j → re-seed,
+voir l'encadré Liquibase) ; stub d'archivage et API en plan Free (spin-down après ~15 min
+d'inactivité : réveiller le stub avant un parcours de suppression, sous peine de 503 → refus
+de suppression, comportement de sécurité attendu).
 
 ## Migrations Liquibase — règle expand/contract
 
