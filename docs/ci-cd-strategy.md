@@ -78,6 +78,13 @@ deploy hook Render — secret `RENDER_STAGING_DEPLOY_HOOK`, l'auto-deploy Render
 correspondantes. Les secrets de déploiement sont rangés par GitHub Environment (`staging`,
 `preprod`, `production`) — #57.
 
+Mécanique retenue pour déployer une image GHCR précise (spike #52, détails et procédure de
+test : [render-image-deploys.md](render-image-deploys.md)) : les images étant publiques, pas
+de credentials registry côté Render ; préprod et prod utilisent l'**API Render**
+(`POST /v1/services/{id}/deploys` avec `imageUrl`, suivi du deploy jusqu'à `live` avant les
+smoke tests) — secrets `RENDER_API_KEY` + service IDs par Environment ; le rollback N-1 est
+la même commande avec le tag précédent.
+
 Environnement staging provisionné (#48) : PostgreSQL Render **16.x** — écart assumé avec le
 12.8 de dev/IT (Render ne propose plus la 12) — en plan **Free** (expiration 30 j → re-seed,
 voir l'encadré Liquibase) ; stub d'archivage et API en plan Free (spin-down après ~15 min
@@ -125,8 +132,9 @@ ci-dessous est illusoire. Cas limites et procédure détaillée : runbook de rol
 1. Déploiement de la nouvelle image (préprod puis prod).
 2. Smoke tests (automatisés en préprod, vérification post-déploiement en prod).
 3. En cas d'anomalie : **redéploiement de la dernière image stable** (tag N-1 dans GHCR)
-   depuis l'interface Render — procédure pas-à-pas dans le runbook (#59, alimenté par le
-   spike #52).
+   via l'API Render ou l'interface — mécanique validée par le spike #52
+   ([render-image-deploys.md](render-image-deploys.md)), procédure pas-à-pas dans le
+   runbook (#59).
 
 Limite connue : le rollback est sûr tant que les migrations respectent expand/contract.
 Si une migration destructive a été appliquée, **ne pas rollbacker** — escalader (cf. runbook).
