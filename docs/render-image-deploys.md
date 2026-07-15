@@ -73,9 +73,9 @@ résultat conditionne la suite.
    [expand/contract](ci-cd-strategy.md#migrations-liquibase--règle-expandcontract) — sinon
    **ne pas rollbacker**, escalader (runbook #59).
 
-> Point à confirmer lors du test réel : le comportement zéro-downtime documenté par Render
-> sur le plan **Free** (spin-down, une seule instance) — chronométrer la bascule et noter
-> toute interruption.
+> **Confirmé lors du test réel (2026-07-15)** : le zéro-downtime fonctionne aussi sur plan
+> **Free** — sonde `/actuator/health` toutes les 10 s pendant les bascules, **aucune
+> interruption observée** (voir résultats ci-dessous).
 
 ## Secrets GitHub Actions
 
@@ -85,21 +85,29 @@ résultat conditionne la suite.
 | `RENDER_PREPROD_SERVICE_ID` | Environment `preprod` | `srv-...` du service préprod |
 | `RENDER_STAGING_DEPLOY_HOOK` | déjà en place (staging) | inchangé — le hook suffit quand on ne suit pas le résultat |
 
-## Test sur service jetable (à dérouler avant #53/#54)
+## Test sur service jetable — résultats (2026-07-15)
 
-Timebox ~1 h, tout se supprime à la fin :
+Déroulé entièrement via l'API (service `spike-52-jetable`, plan Free, Frankfurt, images
+`financial-api` `0.1.0`/`0.1.1`, env vars copiées du staging, service supprimé à la fin).
+Le service a même été **créé** par l'API (`POST /v1/services`, `runtime: image`) — la
+réponse contient le `deployId` du premier déploiement.
 
-1. Dashboard Render → **New Web Service → Existing Image** →
-   `ghcr.io/souleymanebarry/financial-tracking-ws/financial-api:0.1.0`, plan Free, région EU,
-   healthcheck `/actuator/health`, auto-deploy off. Env vars : copier celles du service
-   staging (profil `staging`, datasource de la base staging — sans risque, Liquibase y est
-   désactivé).
-2. Créer la clé API, noter le `srv-...` du service jetable.
-3. Dérouler la commande API avec le tag `0.1.1` → statut `live`, vérifier
-   `/actuator/health` et le tag affiché dans le dashboard (*Events*).
-4. **Rollback** : même commande avec `0.1.0` → `live` ; chronométrer, noter le comportement
-   pendant la bascule (santé en continu : `while :; do curl -s .../actuator/health; sleep 5; done`).
-5. **Cas d'échec** : déployer un tag inexistant (`9.9.9`) → constater `update_failed` et que
-   la version en place continue de servir.
-6. Supprimer le service jetable ; reporter les mesures (durées, interruption éventuelle)
-   dans ce document et cocher les critères de #52.
+| Cas | Résultat | Durée | Interruption |
+|---|---|---|---|
+| Premier deploy `0.1.0` (pull initial + boot + healthcheck) | `live` | ~5 min 45 | — |
+| Montée de version `0.1.0` → `0.1.1` (`POST /deploys` + `imageUrl`) | `live` | **2 min 06** | **aucune** (santé 200 en continu) |
+| Rollback `0.1.1` → `0.1.0` (même commande, tag N-1) | `live` | **2 min 37** | **aucune** |
+| Tag inexistant `9.9.9` | **HTTP 400 immédiat** `unable to fetch image with provided input` — aucun deploy créé, service intact | — | aucune |
+| Deploy en échec au boot (app crash) | `update_failed`, la version en place continue de servir ; diagnostic via `GET /v1/logs?ownerId=...&resource=srv-...` | ~1 min 40 | aucune |
+
+Enseignements complémentaires :
+
+- **Render valide l'existence de l'image au moment du `POST /deploys`** : un tag inexistant
+  est refusé en 400 avant toute création de deploy — fail-fast idéal pour le job CI.
+- Le cas « échec au boot » a été observé en vrai (contexte Spring en erreur → `update_failed`,
+  ancienne version intacte) : la promesse zéro-downtime tient aussi en cas d'échec.
+- Les images `v0.1.x` prédatent le profil `staging` : elles ont été bootées sans profil avec
+  `SPRING_CLOUD_VAULT_ENABLED=false`, `SPRING_LIQUIBASE_ENABLED=false`, datasource staging en
+  env vars et `RSA_PUBLICKEY=classpath:certs/public.pem` (binding relaxé Spring). Rappel utile :
+  **une image se déploie avec la config de son époque** — la préprod devra toujours recevoir
+  des env vars compatibles avec le tag déployé.
