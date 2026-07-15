@@ -25,7 +25,7 @@ le backlog d'implémentation vit dans le GitHub Project
 | Artefact | Build Render depuis le dépôt (`Dockerfile --target api`) | Image GHCR `financial-api:X.Y.Z` | **La même** image GHCR `X.Y.Z` |
 | Base de données | PostgreSQL Render (dédiée) | PostgreSQL Render (dédiée) | PostgreSQL Render (dédiée) |
 | Profil Spring | `staging` (#47) | à trancher : `staging` durcie ou `preprod` dédié (#53) | `prod` |
-| Validation | Checklist manuelle go/no-go (#50) | Smoke tests automatisés (#55) | Vérification post-déploiement (health + version) |
+| Validation | Checklist manuelle go/no-go ([staging-validation.md](staging-validation.md)) | Smoke tests automatisés (#55) | Vérification post-déploiement (health + version) |
 
 ### Matrice réel / simulé
 
@@ -53,7 +53,7 @@ Merge → master
       ▼
    STAGING          Build Render depuis le dépôt
       │
-Validation fonctionnelle (checklist go/no-go)
+Validation fonctionnelle (checklist go/no-go — staging-validation.md)
       │
 Tag vX.Y.Z
       │
