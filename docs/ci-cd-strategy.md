@@ -25,7 +25,7 @@ le backlog d'implémentation vit dans le GitHub Project
 | Artefact | Build Render depuis le dépôt (`Dockerfile --target api`) | Image GHCR `financial-api:X.Y.Z` | **La même** image GHCR `X.Y.Z` |
 | Base de données | PostgreSQL Render (dédiée) | PostgreSQL Render (dédiée) | PostgreSQL Render (dédiée) |
 | Profil Spring | `staging` (#47) | à trancher : `staging` durcie ou `preprod` dédié (#53) | `prod` |
-| Validation | Checklist manuelle go/no-go (#50) | Smoke tests automatisés (#55) | Vérification post-déploiement (health + version) |
+| Validation | Checklist manuelle go/no-go ([staging-validation.md](staging-validation.md)) | Smoke tests automatisés (#55) | Vérification post-déploiement (health + version) |
 
 ### Matrice réel / simulé
 
@@ -53,7 +53,7 @@ Merge → master
       ▼
    STAGING          Build Render depuis le dépôt
       │
-Validation fonctionnelle (checklist go/no-go)
+Validation fonctionnelle (checklist go/no-go — staging-validation.md)
       │
 Tag vX.Y.Z
       │
@@ -77,6 +77,13 @@ deploy hook Render — secret `RENDER_STAGING_DEPLOY_HOOK`, l'auto-deploy Render
 `deploy-preprod` (#54), `smoke-preprod` (#55) et `deploy-prod` (#58) arrivent avec les épics
 correspondantes. Les secrets de déploiement sont rangés par GitHub Environment (`staging`,
 `preprod`, `production`) — #57.
+
+Mécanique retenue pour déployer une image GHCR précise (spike #52, détails et procédure de
+test : [render-image-deploys.md](render-image-deploys.md)) : les images étant publiques, pas
+de credentials registry côté Render ; préprod et prod utilisent l'**API Render**
+(`POST /v1/services/{id}/deploys` avec `imageUrl`, suivi du deploy jusqu'à `live` avant les
+smoke tests) — secrets `RENDER_API_KEY` + service IDs par Environment ; le rollback N-1 est
+la même commande avec le tag précédent.
 
 Environnement staging provisionné (#48) : PostgreSQL Render **16.x** — écart assumé avec le
 12.8 de dev/IT (Render ne propose plus la 12) — en plan **Free** (expiration 30 j → re-seed,
@@ -125,8 +132,9 @@ ci-dessous est illusoire. Cas limites et procédure détaillée : runbook de rol
 1. Déploiement de la nouvelle image (préprod puis prod).
 2. Smoke tests (automatisés en préprod, vérification post-déploiement en prod).
 3. En cas d'anomalie : **redéploiement de la dernière image stable** (tag N-1 dans GHCR)
-   depuis l'interface Render — procédure pas-à-pas dans le runbook (#59, alimenté par le
-   spike #52).
+   via l'API Render ou l'interface — mécanique validée par le spike #52
+   ([render-image-deploys.md](render-image-deploys.md)), procédure pas-à-pas dans le
+   runbook (#59).
 
 Limite connue : le rollback est sûr tant que les migrations respectent expand/contract.
 Si une migration destructive a été appliquée, **ne pas rollbacker** — escalader (cf. runbook).

@@ -12,13 +12,20 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 import java.net.URI;
 import java.util.stream.Collectors;
 
+/**
+ * Hérite de {@link ResponseEntityExceptionHandler} pour que les exceptions Spring MVC
+ * porteuses de statut (URL inconnue → 404, méthode non supportée → 405, JSON illisible
+ * → 400, media type → 415…) gardent leur statut au lieu d'être avalées par le
+ * fourre-tout {@code Exception.class} qui les convertissait en 500 (issue #80).
+ */
 @RestControllerAdvice
 @Log4j2
-public class GlobalExceptionHandler {
+public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(ConstraintViolationException.class)
     public ProblemDetail handleConstraintViolation(ConstraintViolationException ex, HttpServletRequest request) {
