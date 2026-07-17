@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import com.barry.bank.api.validation.OnCreate;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.groups.Default;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -83,7 +84,9 @@ public interface CustomerController {
     @ApiResponse(responseCode = "400", description = "Invalid request body")
     @ApiResponse(responseCode = "401", description = "Unauthorized — valid JWT required")
     @PostMapping
-    ResponseEntity<CustomerDTO> createCustomer(@Validated(OnCreate.class) @RequestBody CustomerDTO customerDTO);
+    ResponseEntity<CustomerDTO> createCustomer(
+            // OnCreate seul ignorerait les contraintes du groupe Default (email) — issue #81
+            @Validated({OnCreate.class, Default.class}) @RequestBody CustomerDTO customerDTO);
 
     @Operation(
             summary = "Partially update a customer",

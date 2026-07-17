@@ -21,6 +21,13 @@
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
 
+        <!-- Bean validation (Hibernate Validator) — sans implémentation sur le classpath,
+             Spring MVC ignore silencieusement @Valid/@Validated (issue #81) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
+
         <!-- Actuator (healthchecks liveness/readiness) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
