@@ -8,17 +8,10 @@ import com.barry.bank.domain.exception.ResourceNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.log4j.Log4j2;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ProblemDetail;
-import org.springframework.http.ResponseEntity;
-import org.springframework.lang.Nullable;
-import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.web.context.request.ServletWebRequest;
-import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 import java.net.URI;
@@ -44,28 +37,6 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         problem.setTitle("Validation Failed");
         problem.setInstance(URI.create(request.getRequestURI()));
         return problem;
-    }
-
-    /**
-     * Bean validation sur {@code @Valid @RequestBody} : le détail par défaut
-     * (« Invalid request content. ») ne cite pas les champs en faute — on le remplace
-     * par la liste {@code champ: message}, alignée sur handleConstraintViolation (issue #81).
-     */
-    @Override
-    @Nullable
-    protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex,
-            HttpHeaders headers, HttpStatusCode status, WebRequest request) {
-        String detail = ex.getBindingResult().getFieldErrors().stream()
-                .map(fe -> fe.getField() + ": " + fe.getDefaultMessage())
-                .sorted()
-                .collect(Collectors.joining(", "));
-        String uri = ((ServletWebRequest) request).getRequest().getRequestURI();
-        log.warn("Validation failed on {}: {}", uri, detail);
-        ProblemDetail problem = ex.getBody();
-        problem.setTitle("Validation Failed");
-        problem.setDetail(detail);
-        problem.setInstance(URI.create(uri));
-        return handleExceptionInternal(ex, problem, headers, status, request);
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
