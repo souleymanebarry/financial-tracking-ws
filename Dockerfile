@@ -56,9 +56,13 @@ RUN apt-get update && \
     groupadd -r appgroup && useradd -r -g appgroup appuser
 WORKDIR /app
 
+# Tuning mémoire par défaut via JAVA_TOOL_OPTIONS et non en argument CLI : un argument
+# CLI primerait sur la variable et rendrait impossible tout override par la plateforme
+# (Render 512 Mo écrase cette valeur avec son propre JAVA_TOOL_OPTIONS — 75 % de heap
+# y provoquait un kill OOM exit 137). UseContainerSupport est actif par défaut sur JDK 17.
+ENV JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=75.0"
+
 ENTRYPOINT ["java", \
-  "-XX:+UseContainerSupport", \
-  "-XX:MaxRAMPercentage=75.0", \
   "-Duser.timezone=Europe/Paris", \
   "-Dsun.net.inetaddr.ttl=60", \
   "org.springframework.boot.loader.launch.JarLauncher"]
