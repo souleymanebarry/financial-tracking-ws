@@ -59,7 +59,7 @@
 		<testcontainers.version>1.21.4</testcontainers.version>
 		<openapi.version>2.6.0</openapi.version>
 		<itext.version>7.2.6</itext.version>
-		<minio.version>8.5.10</minio.version>
+		<minio.version>9.0.3</minio.version>
 		<sonar-maven-plugin.version>5.1.0.4751</sonar-maven-plugin.version>
 		<!-- SonarCloud : analyse lancée depuis la racine du réacteur (mvn sonar:sonar en CI) -->
 		<sonar.host.url>https://sonarcloud.io</sonar.host.url>
