@@ -58,7 +58,7 @@
 		<!-- Override du BOM Spring Boot (1.19.8) : Docker Engine 29+ rejette le client docker-java des versions < 1.21.4 -->
 		<testcontainers.version>1.21.4</testcontainers.version>
 		<openapi.version>2.6.0</openapi.version>
-		<itext.version>7.2.6</itext.version>
+		<itext.version>9.7.0</itext.version>
 		<minio.version>8.5.10</minio.version>
 		<sonar-maven-plugin.version>5.1.0.4751</sonar-maven-plugin.version>
 		<!-- SonarCloud : analyse lancée depuis la racine du réacteur (mvn sonar:sonar en CI) -->
