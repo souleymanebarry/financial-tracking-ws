@@ -88,7 +88,14 @@ public class CustomerServiceImpl implements CustomerService {
         Optional.ofNullable(customer.getFirstName()).ifPresent(existingCustomer::setFirstName);
         Optional.ofNullable(customer.getLastName()).ifPresent(existingCustomer:: setLastName);
         Optional.ofNullable(customer.getGender()).ifPresent(existingCustomer:: setGender);
-        Optional.ofNullable(customer.getEmail()).ifPresent(existingCustomer:: setEmail);
+        Optional.ofNullable(customer.getEmail())
+                .filter(newEmail -> !newEmail.equalsIgnoreCase(existingCustomer.getEmail()))
+                .ifPresent(newEmail -> {
+                    if (customerRepository.existsByEmailIgnoreCase(newEmail)) {
+                        throw new DuplicateResourceException("Customer with this email already exists");
+                    }
+                    existingCustomer.setEmail(newEmail);
+                });
 
         Customer savedCustomer = customerRepository.save(existingCustomer);
         log.info("Customer partially updated: customerId={}", customerId);
