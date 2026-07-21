@@ -41,3 +41,7 @@ build/
 
 # Keypair et scripts du POC staging (spike #45) — jamais committés
 staging-poc/
+
+# Dumps et baseline Liquibase — artefacts locaux de recréation DB (seed manuel)
+dump_financial_db.sql
+changelog_registry.sql
