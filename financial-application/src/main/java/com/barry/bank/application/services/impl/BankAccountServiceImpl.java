@@ -50,12 +50,12 @@ public class BankAccountServiceImpl implements BankAccountService {
         if (account.getOverDraft() == null) {
             throw new BusinessRuleException("CurrentAccount must have an overDraft");
         }
-        ensureCustomerExists(customer);
+        Customer managedCustomer = loadManagedCustomer(customer);
         initializeDefaultValues(account);
-        attachAccountToCustomer(account, customer);
+        attachAccountToCustomer(account, managedCustomer);
         CurrentAccount savedAccount = accountRepository.save(account);
         log.info("CurrentAccount created: accountId={}, customerId={}",
-                savedAccount.getAccountId(), customer.getCustomerId());
+                savedAccount.getAccountId(), managedCustomer.getCustomerId());
         return savedAccount;
     }
 
@@ -65,12 +65,12 @@ public class BankAccountServiceImpl implements BankAccountService {
         if (account.getInterestRate() == null) {
             throw new BusinessRuleException("SavingAccount must have an InterestRate");
         }
-        ensureCustomerExists(customer);
+        Customer managedCustomer = loadManagedCustomer(customer);
         initializeDefaultValues(account);
-        attachAccountToCustomer(account, customer);
+        attachAccountToCustomer(account, managedCustomer);
         SavingAccount savedAccount = accountRepository.save(account);
         log.info("SavingAccount created: accountId={}, customerId={}",
-                savedAccount.getAccountId(), customer.getCustomerId());
+                savedAccount.getAccountId(), managedCustomer.getCustomerId());
         return savedAccount;
     }
 
@@ -153,11 +153,10 @@ public class BankAccountServiceImpl implements BankAccountService {
         }
     }
 
-    private void ensureCustomerExists(Customer customer) {
+    private Customer loadManagedCustomer(Customer customer) {
         final UUID customerId = customer.getCustomerId();
-        if (!customerRepository.existsById(customerId)) {
-            throw new ResourceNotFoundException("Customer not found with ID: " + customerId);
-        }
+        return customerRepository.findById(customerId)
+                .orElseThrow(() -> new ResourceNotFoundException("Customer not found with ID: " + customerId));
     }
 
     private void attachAccountToCustomer(BankAccount account, Customer customer) {
