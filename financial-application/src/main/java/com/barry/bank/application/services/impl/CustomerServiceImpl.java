@@ -42,11 +42,9 @@ public class CustomerServiceImpl implements CustomerService {
 
         final String email = customer.getEmail();
         if (StringUtils.isBlank(email)) {
-            throw new IllegalArgumentException("Customer email must not be null");
+            throw new IllegalArgumentException("Customer email must not be blank");
         }
-        if (customerRepository.existsByEmailIgnoreCase(email)) {
-            throw new DuplicateResourceException("Customer with this email already exists");
-        }
+        ensureEmailIsAvailable(email);
 
         Customer savedCustomer = customerRepository.save(customer);
         log.info("Customer created: customerId={}", savedCustomer.getCustomerId());
@@ -86,9 +84,14 @@ public class CustomerServiceImpl implements CustomerService {
         Customer existingCustomer = findCustomerOrThrow(customerId);
         // update only non-null fields
         Optional.ofNullable(customer.getFirstName()).ifPresent(existingCustomer::setFirstName);
-        Optional.ofNullable(customer.getLastName()).ifPresent(existingCustomer:: setLastName);
-        Optional.ofNullable(customer.getGender()).ifPresent(existingCustomer:: setGender);
-        Optional.ofNullable(customer.getEmail()).ifPresent(existingCustomer:: setEmail);
+        Optional.ofNullable(customer.getLastName()).ifPresent(existingCustomer::setLastName);
+        Optional.ofNullable(customer.getGender()).ifPresent(existingCustomer::setGender);
+        Optional.ofNullable(customer.getEmail())
+                .filter(newEmail -> !newEmail.equalsIgnoreCase(existingCustomer.getEmail()))
+                .ifPresent(newEmail -> {
+                    ensureEmailIsAvailable(newEmail);
+                    existingCustomer.setEmail(newEmail);
+                });
 
         Customer savedCustomer = customerRepository.save(existingCustomer);
         log.info("Customer partially updated: customerId={}", customerId);
@@ -121,6 +124,12 @@ public class CustomerServiceImpl implements CustomerService {
         accountService.deleteAccountsByCustomer(customerId);
         customerRepository.delete(customer);
         log.info("Customer and all related data deleted successfully: customerId={}", customerId);
+    }
+
+    private void ensureEmailIsAvailable(String email) {
+        if (customerRepository.existsByEmailIgnoreCase(email)) {
+            throw new DuplicateResourceException("Customer with this email already exists");
+        }
     }
 
     private Customer findCustomerOrThrow(UUID customerId) {
