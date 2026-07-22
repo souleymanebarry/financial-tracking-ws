@@ -110,9 +110,10 @@ public interface BankAccountController {
             description = "Debits an amount from an account (checks balance before operation)."
     )
     @ApiResponse(responseCode = "200", description = "Debit successful")
-    @ApiResponse(responseCode = "400", description = "Invalid request or insufficient balance")
+    @ApiResponse(responseCode = "400", description = "Invalid request (validation error)")
     @ApiResponse(responseCode = "401", description = "Unauthorized — valid JWT required")
     @ApiResponse(responseCode = "404", description = "Account not found")
+    @ApiResponse(responseCode = "422", description = "Insufficient balance")
     @PostMapping("/{accountId}/debit")
     ResponseEntity<Void> performDebit(
             @Parameter(description = "Unique identifier of the account to debit", example = "7ba95f32-1234-4321-abcd-2c963f66afa6")
@@ -145,9 +146,10 @@ public interface BankAccountController {
             """
     )
     @ApiResponse(responseCode = "200", description = "Transfer successful")
-    @ApiResponse(responseCode = "400", description = "Invalid transfer request or insufficient balance")
+    @ApiResponse(responseCode = "400", description = "Invalid transfer request (validation error)")
     @ApiResponse(responseCode = "401", description = "Unauthorized — valid JWT required")
     @ApiResponse(responseCode = "404", description = "Source or destination account not found")
+    @ApiResponse(responseCode = "422", description = "Insufficient balance or same source/destination account")
     @PostMapping("/transfer")
     ResponseEntity<Void> performTransfer(@Valid @RequestBody TransferDTO transferDTO);
 
