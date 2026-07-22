@@ -46,17 +46,11 @@ public class BankAccountServiceImpl implements BankAccountService {
 
     @Override
     @Transactional
-    public CurrentAccount createCurrentAccount(CurrentAccount account, Customer customer){
+    public CurrentAccount createCurrentAccount(CurrentAccount account, Customer customer) {
         if (account.getOverDraft() == null) {
             throw new BusinessRuleException("CurrentAccount must have an overDraft");
         }
-        ensureCustomerExists(customer);
-        initializeDefaultValues(account);
-        attachAccountToCustomer(account, customer);
-        CurrentAccount savedAccount = accountRepository.save(account);
-        log.info("CurrentAccount created: accountId={}, customerId={}",
-                savedAccount.getAccountId(), customer.getCustomerId());
-        return savedAccount;
+        return (CurrentAccount) persistNewAccount(account, customer);
     }
 
     @Override
@@ -65,13 +59,7 @@ public class BankAccountServiceImpl implements BankAccountService {
         if (account.getInterestRate() == null) {
             throw new BusinessRuleException("SavingAccount must have an InterestRate");
         }
-        ensureCustomerExists(customer);
-        initializeDefaultValues(account);
-        attachAccountToCustomer(account, customer);
-        SavingAccount savedAccount = accountRepository.save(account);
-        log.info("SavingAccount created: accountId={}, customerId={}",
-                savedAccount.getAccountId(), customer.getCustomerId());
-        return savedAccount;
+        return (SavingAccount) persistNewAccount(account, customer);
     }
 
     @Override
@@ -153,11 +141,20 @@ public class BankAccountServiceImpl implements BankAccountService {
         }
     }
 
-    private void ensureCustomerExists(Customer customer) {
+    private BankAccount persistNewAccount(BankAccount account, Customer customer) {
+        Customer managedCustomer = loadManagedCustomer(customer);
+        initializeDefaultValues(account);
+        attachAccountToCustomer(account, managedCustomer);
+        BankAccount savedAccount = accountRepository.save(account);
+        log.info("{} created: accountId={}, customerId={}",
+                account.getClass().getSimpleName(), savedAccount.getAccountId(), managedCustomer.getCustomerId());
+        return savedAccount;
+    }
+
+    private Customer loadManagedCustomer(Customer customer) {
         final UUID customerId = customer.getCustomerId();
-        if (!customerRepository.existsById(customerId)) {
-            throw new ResourceNotFoundException("Customer not found with ID: " + customerId);
-        }
+        return customerRepository.findById(customerId)
+                .orElseThrow(() -> new ResourceNotFoundException("Customer not found with ID: " + customerId));
     }
 
     private void attachAccountToCustomer(BankAccount account, Customer customer) {
