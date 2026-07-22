@@ -109,7 +109,7 @@ class CustomerServiceImplTest {
 
         assertThatThrownBy(() -> customerService.createCustomer(customerWithInvalidEmail))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("Customer email must not be null");
+                .hasMessageContaining("Customer email must not be blank");
         // verify
         verifyNoInteractions(customerRepository);
     }
