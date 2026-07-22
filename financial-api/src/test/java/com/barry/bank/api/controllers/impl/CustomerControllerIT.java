@@ -152,6 +152,54 @@ class CustomerControllerIT extends AbstractIntegrationTest {
 
     @Test
     @SneakyThrows
+    void shouldRejectPartialUpdateWhenEmailBelongsToAnotherCustomer() {
+        // arrange — 'jane.smith@example.com' appartient déjà au client 22222222 (#94)
+        String jsonBody = """
+                {
+                  "email": "jane.smith@example.com"
+                }
+                """;
+
+        mockMvc.perform(patch("/api/v1/customers/{customerId}", "33333333-cccc-4ccc-cccc-333333333333")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON)
+                        .content(jsonBody))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.status").value(409));
+
+        // l'email du client cible n'a pas changé
+        List<Map<String, Object>> target = jdbcTemplate.queryForList(
+                "SELECT email FROM customer WHERE customer_id = '33333333-cccc-4ccc-cccc-333333333333'");
+        assertThat(target).hasSize(1);
+        assertThat(target.get(0)).containsEntry("email", "alexandre.durant@google.com");
+
+        // toujours un seul porteur de jane.smith@example.com
+        List<Map<String, Object>> holders = jdbcTemplate.queryForList(
+                "SELECT customer_id FROM customer WHERE email = 'jane.smith@example.com'");
+        assertThat(holders).hasSize(1);
+    }
+
+    @Test
+    @SneakyThrows
+    void shouldAllowPartialUpdateWhenEmailUnchangedIgnoringCase() {
+        // arrange — même email que l'actuel, casse différente : pas de faux conflit (#94)
+        String jsonBody = """
+                {
+                  "firstName": "Alex",
+                  "email": "ALEXANDRE.DURANT@GOOGLE.COM"
+                }
+                """;
+
+        mockMvc.perform(patch("/api/v1/customers/{customerId}", "33333333-cccc-4ccc-cccc-333333333333")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON)
+                        .content(jsonBody))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.firstName").value("Alex"));
+    }
+
+    @Test
+    @SneakyThrows
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
     void shouldArchiveAndDeleteCustomerSuccessfully() {
         // Arrange – expected payload of the archiving microservice
