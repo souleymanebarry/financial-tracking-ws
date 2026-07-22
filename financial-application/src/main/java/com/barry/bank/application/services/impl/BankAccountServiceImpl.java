@@ -46,17 +46,11 @@ public class BankAccountServiceImpl implements BankAccountService {
 
     @Override
     @Transactional
-    public CurrentAccount createCurrentAccount(CurrentAccount account, Customer customer){
+    public CurrentAccount createCurrentAccount(CurrentAccount account, Customer customer) {
         if (account.getOverDraft() == null) {
             throw new BusinessRuleException("CurrentAccount must have an overDraft");
         }
-        Customer managedCustomer = loadManagedCustomer(customer);
-        initializeDefaultValues(account);
-        attachAccountToCustomer(account, managedCustomer);
-        CurrentAccount savedAccount = accountRepository.save(account);
-        log.info("CurrentAccount created: accountId={}, customerId={}",
-                savedAccount.getAccountId(), managedCustomer.getCustomerId());
-        return savedAccount;
+        return (CurrentAccount) persistNewAccount(account, customer);
     }
 
     @Override
@@ -65,13 +59,7 @@ public class BankAccountServiceImpl implements BankAccountService {
         if (account.getInterestRate() == null) {
             throw new BusinessRuleException("SavingAccount must have an InterestRate");
         }
-        Customer managedCustomer = loadManagedCustomer(customer);
-        initializeDefaultValues(account);
-        attachAccountToCustomer(account, managedCustomer);
-        SavingAccount savedAccount = accountRepository.save(account);
-        log.info("SavingAccount created: accountId={}, customerId={}",
-                savedAccount.getAccountId(), managedCustomer.getCustomerId());
-        return savedAccount;
+        return (SavingAccount) persistNewAccount(account, customer);
     }
 
     @Override
@@ -151,6 +139,16 @@ public class BankAccountServiceImpl implements BankAccountService {
         if (sourceAccount.getAccountId().equals(destinationAccount.getAccountId())) {
             throw new BusinessRuleException("Source account must be different from destination account");
         }
+    }
+
+    private BankAccount persistNewAccount(BankAccount account, Customer customer) {
+        Customer managedCustomer = loadManagedCustomer(customer);
+        initializeDefaultValues(account);
+        attachAccountToCustomer(account, managedCustomer);
+        BankAccount savedAccount = accountRepository.save(account);
+        log.info("{} created: accountId={}, customerId={}",
+                account.getClass().getSimpleName(), savedAccount.getAccountId(), managedCustomer.getCustomerId());
+        return savedAccount;
     }
 
     private Customer loadManagedCustomer(Customer customer) {
