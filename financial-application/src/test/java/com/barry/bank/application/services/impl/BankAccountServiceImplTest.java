@@ -101,7 +101,7 @@ class BankAccountServiceImplTest {
                 .hasMessageContaining("CurrentAccount must have an overDraft");
 
         //verify
-        verify(customerRepository, never()).existsById(any());
+        verify(customerRepository, never()).findById(any());
         verify(accountRepository, never()).save(any());
     }
 
@@ -112,7 +112,7 @@ class BankAccountServiceImplTest {
                 .accountId(UUID.randomUUID())
                 .overDraft(BigDecimal.valueOf(150)).build();
 
-        when(customerRepository.existsById(customer.getCustomerId())).thenReturn(false);
+        when(customerRepository.findById(customer.getCustomerId())).thenReturn(Optional.empty());
 
         //Act Assert
         assertThatThrownBy(()-> accountService.createCurrentAccount(account, customer))
@@ -120,7 +120,7 @@ class BankAccountServiceImplTest {
                 .hasMessageContaining("Customer not found with ID: " + customer.getCustomerId());
 
         //verify
-        verify(customerRepository, times(1)).existsById(any(UUID.class));
+        verify(customerRepository, times(1)).findById(any(UUID.class));
         verify(accountRepository, never()).save(any());
     }
 
@@ -135,7 +135,7 @@ class BankAccountServiceImplTest {
                 .status(CREATED)
                 .overDraft(BigDecimal.valueOf(150)).build();
 
-        when(customerRepository.existsById(customer.getCustomerId())).thenReturn(true);
+        when(customerRepository.findById(customer.getCustomerId())).thenReturn(Optional.of(customer));
         when(accountRepository.save(any(CurrentAccount.class))).thenReturn(account);
 
         //Act
@@ -152,7 +152,7 @@ class BankAccountServiceImplTest {
         );
 
         //verify
-        verify(customerRepository, times(1)).existsById(any(UUID.class));
+        verify(customerRepository, times(1)).findById(any(UUID.class));
         verify(accountRepository).save(account);
     }
 
@@ -166,7 +166,7 @@ class BankAccountServiceImplTest {
                 .status(CREATED)
                 .overDraft(BigDecimal.valueOf(200)).build();
 
-        when(customerRepository.existsById(customer.getCustomerId())).thenReturn(true);
+        when(customerRepository.findById(customer.getCustomerId())).thenReturn(Optional.of(customer));
         when(accountRepository.save(any(CurrentAccount.class))).thenReturn(account);
 
         //Act
@@ -183,7 +183,7 @@ class BankAccountServiceImplTest {
         );
 
         //verify
-        verify(customerRepository, times(1)).existsById(any(UUID.class));
+        verify(customerRepository, times(1)).findById(any(UUID.class));
         verify(accountRepository,times(1)).save(account);
     }
 
@@ -202,7 +202,7 @@ class BankAccountServiceImplTest {
                 .hasMessageContaining("SavingAccount must have an InterestRate");
 
         //verify
-        verify(customerRepository, never()).existsById(any());
+        verify(customerRepository, never()).findById(any());
         verify(accountRepository, never()).save(any());
     }
 
@@ -213,7 +213,7 @@ class BankAccountServiceImplTest {
                 .accountId(UUID.randomUUID())
                 .interestRate(BigDecimal.valueOf(2.7)).build();
 
-        when(customerRepository.existsById(customer.getCustomerId())).thenReturn(false);
+        when(customerRepository.findById(customer.getCustomerId())).thenReturn(Optional.empty());
 
         //Act Assert
         assertThatThrownBy(()-> accountService.createSavingAccount(account, customer))
@@ -221,7 +221,7 @@ class BankAccountServiceImplTest {
                 .hasMessageContaining("Customer not found with ID: " + customer.getCustomerId());
 
         //verify
-        verify(customerRepository, times(1)).existsById(any(UUID.class));
+        verify(customerRepository, times(1)).findById(any(UUID.class));
         verify(accountRepository, never()).save(any());
     }
 
@@ -236,7 +236,7 @@ class BankAccountServiceImplTest {
                 .status(CREATED)
                 .interestRate(BigDecimal.valueOf(2.5)).build();
 
-        when(customerRepository.existsById(customer.getCustomerId())).thenReturn(true);
+        when(customerRepository.findById(customer.getCustomerId())).thenReturn(Optional.of(customer));
         when(accountRepository.save(any(SavingAccount.class))).thenReturn(account);
 
         //Act
@@ -253,7 +253,7 @@ class BankAccountServiceImplTest {
         );
 
         //verify
-        verify(customerRepository, times(1)).existsById(any(UUID.class));
+        verify(customerRepository, times(1)).findById(any(UUID.class));
         verify(accountRepository).save(account);
     }
 
@@ -268,7 +268,7 @@ class BankAccountServiceImplTest {
                 .status(CREATED)
                 .interestRate(BigDecimal.valueOf(1.6)).build();
 
-        when(customerRepository.existsById(customer.getCustomerId())).thenReturn(true);
+        when(customerRepository.findById(customer.getCustomerId())).thenReturn(Optional.of(customer));
         when(accountRepository.save(any(SavingAccount.class))).thenReturn(account);
 
         //Act
@@ -285,7 +285,7 @@ class BankAccountServiceImplTest {
         );
 
         //verify
-        verify(customerRepository, times(1)).existsById(any(UUID.class));
+        verify(customerRepository, times(1)).findById(any(UUID.class));
         verify(accountRepository,times(1)).save(account);
     }
 
